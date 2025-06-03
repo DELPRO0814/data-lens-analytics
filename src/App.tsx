@@ -11,6 +11,19 @@ import AuthPage from './components/auth/AuthPage';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import Dashboard from './components/dashboard/Dashboard';
+import CustomersPage from './pages/CustomersPage';
+import ContactsPage from './pages/ContactsPage';
+import ProductsPage from './pages/ProductsPage';
+import PredictionsPage from './pages/PredictionsPage';
+import SegmentsPage from './pages/SegmentsPage';
+import SalesActivitiesPage from './pages/SalesActivitiesPage';
+import EngagementsPage from './pages/EngagementsPage';
+import OrdersPage from './pages/OrdersPage';
+import IssuesPage from './pages/IssuesPage';
+import ClaimsPage from './pages/ClaimsPage';
+import SalesForecastPage from './pages/SalesForecastPage';
+import ProfitGradePage from './pages/ProfitGradePage';
+import OrderForecastPage from './pages/OrderForecastPage';
 
 const queryClient = new QueryClient();
 
@@ -80,19 +93,19 @@ const App = () => {
               <main className="flex-1 overflow-auto p-6">
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
-                  <Route path="/customers" element={<div className="text-center py-12 text-gray-500">고객 페이지 (개발 예정)</div>} />
-                  <Route path="/contacts" element={<div className="text-center py-12 text-gray-500">연락처 페이지 (개발 예정)</div>} />
-                  <Route path="/products" element={<div className="text-center py-12 text-gray-500">제품 페이지 (개발 예정)</div>} />
-                  <Route path="/predictions" element={<div className="text-center py-12 text-gray-500">예측 페이지 (개발 예정)</div>} />
-                  <Route path="/segments" element={<div className="text-center py-12 text-gray-500">세그먼트 페이지 (개발 예정)</div>} />
-                  <Route path="/sales-activities" element={<div className="text-center py-12 text-gray-500">영업 활동 페이지 (개발 예정)</div>} />
-                  <Route path="/engagements" element={<div className="text-center py-12 text-gray-500">참여 페이지 (개발 예정)</div>} />
-                  <Route path="/orders" element={<div className="text-center py-12 text-gray-500">주문 페이지 (개발 예정)</div>} />
-                  <Route path="/issues" element={<div className="text-center py-12 text-gray-500">이슈 페이지 (개발 예정)</div>} />
-                  <Route path="/claims" element={<div className="text-center py-12 text-gray-500">클레임 페이지 (개발 예정)</div>} />
-                  <Route path="/sales-forecast" element={<div className="text-center py-12 text-gray-500">영업 접촉 예측 페이지 (개발 예정)</div>} />
-                  <Route path="/profit-grade" element={<div className="text-center py-12 text-gray-500">고객 수익 등급 페이지 (개발 예정)</div>} />
-                  <Route path="/order-forecast" element={<div className="text-center py-12 text-gray-500">고객 주문 예측 페이지 (개발 예정)</div>} />
+                  <Route path="/customers" element={<CustomersPage />} />
+                  <Route path="/contacts" element={<ContactsPage />} />
+                  <Route path="/products" element={<ProductsPage />} />
+                  <Route path="/predictions" element={<PredictionsPage />} />
+                  <Route path="/segments" element={<SegmentsPage />} />
+                  <Route path="/sales-activities" element={<SalesActivitiesPage />} />
+                  <Route path="/engagements" element={<EngagementsPage />} />
+                  <Route path="/orders" element={<OrdersPage />} />
+                  <Route path="/issues" element={<IssuesPage />} />
+                  <Route path="/claims" element={<ClaimsPage />} />
+                  <Route path="/sales-forecast" element={<SalesForecastPage />} />
+                  <Route path="/profit-grade" element={<ProfitGradePage />} />
+                  <Route path="/order-forecast" element={<OrderForecastPage />} />
                   <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
               </main>
