@@ -20,7 +20,7 @@ const OrdersPage = () => {
         .from('orders')
         .select(`
           *,
-          contacts!inner(name, customers!inner(company_name)),
+          contacts(name, customers(company_name)),
           products(model)
         `)
         .order('order_date', { ascending: false });

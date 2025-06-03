@@ -20,7 +20,7 @@ const PredictionsPage = () => {
         .from('predictions')
         .select(`
           *,
-          contacts!inner(name, customers!inner(company_name))
+          contacts(name, customers(company_name))
         `)
         .order('predicted_date', { ascending: false });
 

@@ -20,7 +20,7 @@ const ContactsPage = () => {
         .from('contacts')
         .select(`
           *,
-          customers!inner(company_name)
+          customers(company_name)
         `)
         .order('name');
 
@@ -52,12 +52,12 @@ const ContactsPage = () => {
     { 
       key: 'is_keyman', 
       label: '키맨',
-      render: (value: string) => value === 'Y' ? '✓' : '✗'
+      render: (value: BinaryFlag) => value === '1' ? '✓' : '✗' // '1'로 변경
     },
     { 
       key: 'is_executive', 
       label: '임원',
-      render: (value: string) => value === 'Y' ? '✓' : '✗'
+      render: (value: BinaryFlag) => value === '1' ? '✓' : '✗' // '1'로 변경
     }
   ];
 

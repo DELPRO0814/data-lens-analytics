@@ -20,7 +20,7 @@ const SalesActivitiesPage = () => {
         .from('sales_activities')
         .select(`
           *,
-          customers!inner(company_name),
+          customers(company_name),
           contacts(name)
         `)
         .order('activity_date', { ascending: false });

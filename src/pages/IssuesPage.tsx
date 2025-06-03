@@ -20,7 +20,7 @@ const IssuesPage = () => {
         .from('issues')
         .select(`
           *,
-          orders(contacts!inner(name, customers!inner(company_name)))
+          orders(contacts(name, customers(company_name)))
         `)
         .order('issue_date', { ascending: false });
 
@@ -37,6 +37,7 @@ const IssuesPage = () => {
       setLoading(false);
     }
   };
+
 
   const columns = [
     { key: 'issue_id', label: '이슈번호' },

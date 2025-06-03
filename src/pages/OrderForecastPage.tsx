@@ -20,7 +20,7 @@ const OrderForecastPage = () => {
         .from('customer_order_forecast')
         .select(`
           *,
-          customers!inner(company_name)
+          customers(company_name)
         `)
         .order('predicted_date', { ascending: false });
 

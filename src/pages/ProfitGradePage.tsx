@@ -20,7 +20,7 @@ const ProfitGradePage = () => {
         .from('customer_profit_grade')
         .select(`
           *,
-          contacts!inner(name, customers!inner(company_name))
+          contacts(name, customers(company_name))
         `)
         .order('total_profit', { ascending: false });
 
