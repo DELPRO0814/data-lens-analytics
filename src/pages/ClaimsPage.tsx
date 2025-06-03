@@ -20,7 +20,7 @@ const ClaimsPage = () => {
         .from('claims')
         .select(`
           *,
-          contacts!inner(name, customers!inner(company_name))
+          contacts(name, customers!inner(company_name))
         `)
         .order('prediction_date', { ascending: false });
 
@@ -37,6 +37,7 @@ const ClaimsPage = () => {
       setLoading(false);
     }
   };
+
 
   const columns = [
     { key: 'claim_id', label: '클레임번호' },

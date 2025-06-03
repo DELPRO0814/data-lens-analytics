@@ -20,7 +20,7 @@ const EngagementsPage = () => {
         .from('engagements')
         .select(`
           *,
-          customers!inner(company_name)
+          customers(company_name)
         `)
         .order('last_active_date', { ascending: false });
 

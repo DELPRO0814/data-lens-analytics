@@ -20,7 +20,7 @@ const SegmentsPage = () => {
         .from('segments')
         .select(`
           *,
-          contacts!inner(name, customers!inner(company_name))
+          contacts(name, customers(company_name))
         `)
         .order('clv', { ascending: false });
 

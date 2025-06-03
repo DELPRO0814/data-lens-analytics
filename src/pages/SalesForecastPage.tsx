@@ -20,7 +20,7 @@ const SalesForecastPage = () => {
         .from('sales_contact_forecast')
         .select(`
           *,
-          customers!inner(company_name)
+          customers(company_name)
         `)
         .order('scf_recommended_date', { ascending: false });
 
