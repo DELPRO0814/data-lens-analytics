@@ -3,10 +3,10 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Users, 
-  Phone, 
+  // Phone, // Contacts menu - can be commented out
   Package, 
   TrendingUp, 
-  Target, 
+  // Target, // Segments menu - can be commented out
   Activity, 
   Heart, 
   ShoppingCart, 
@@ -30,13 +30,12 @@ interface SidebarProps {
   onCollapse: () => void;
 }
 
-const menuItems = [
+// Modular menu items - can be easily commented out
+const coreMenuItems = [
   { path: '/', label: '대시보드', icon: BarChart3 },
   { path: '/customers', label: '고객', icon: Users },
-  { path: '/contacts', label: '연락처', icon: Phone },
   { path: '/products', label: '제품', icon: Package },
   { path: '/predictions', label: '예측', icon: TrendingUp },
-  { path: '/segments', label: '세그먼트', icon: Target },
   { path: '/sales-activities', label: '영업 활동', icon: Activity },
   { path: '/engagements', label: '참여', icon: Heart },
   { path: '/orders', label: '주문', icon: ShoppingCart },
@@ -48,6 +47,17 @@ const menuItems = [
   { path: '/priority-dashboard', label: '우선순위 대시보드', icon: Star },
   { path: '/opportunity-analysis', label: '영업 기회 분석', icon: TrendingDown }
 ];
+
+// Optional menu items that can be commented out
+const optionalMenuItems = [
+  /* Contacts */
+  // { path: '/contacts', label: '연락처', icon: Phone },
+  
+  /* Segments */
+  // { path: '/segments', label: '세그먼트', icon: Target },
+];
+
+const menuItems = [...coreMenuItems, ...optionalMenuItems];
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isCollapsed, onCollapse }) => {
   const location = useLocation();

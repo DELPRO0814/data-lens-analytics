@@ -1,15 +1,20 @@
 
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import PageHeader from '@/components/common/PageHeader';
 import DataTable from '@/components/common/DataTable';
 import AlertBanner from '@/components/common/AlertBanner';
+import AddCustomerModal from '@/components/customer/AddCustomerModal';
 
 const CustomersPage = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -48,8 +53,28 @@ const CustomersPage = () => {
     }
   };
 
+  const handleCustomerAdded = () => {
+    fetchCustomers();
+    setShowAddModal(false);
+    toast({
+      title: "성공",
+      description: "고객이 추가되었습니다.",
+    });
+  };
+
   const columns = [
-    { key: 'company_name', label: '회사명' },
+    { 
+      key: 'company_name', 
+      label: '회사명',
+      render: (value: string, row: any) => (
+        <Link 
+          to={`/customers/${row.customer_id}`}
+          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+        >
+          {value}
+        </Link>
+      )
+    },
     { key: 'company_type', label: '회사 유형' },
     { key: 'industry_type', label: '업종' },
     { key: 'company_size', label: '회사 규모' },
@@ -68,10 +93,10 @@ const CustomersPage = () => {
       label: '회사 유형',
       type: 'multiSelect' as const,
       options: [
-        { value: '대기업', label: '대기업' },
-        { value: '중소기업', label: '중소기업' },
-        { value: '스타트업', label: '스타트업' },
-        { value: '공공기관', label: '공공기관' }
+        { value: '완성차', label: '완성차' },
+        { value: '유통', label: '유통' },
+        { value: '정비소', label: '정비소' },
+        { value: '렌터카', label: '렌터카' }
       ]
     },
     {
@@ -109,6 +134,17 @@ const CustomersPage = () => {
       ]
     },
     {
+      key: 'country',
+      label: '국가',
+      type: 'multiSelect' as const,
+      options: [
+        { value: '한국', label: '한국' },
+        { value: '미국', label: '미국' },
+        { value: '일본', label: '일본' },
+        { value: '중국', label: '중국' }
+      ]
+    },
+    {
       key: 'reg_date',
       label: '등록일',
       type: 'dateRange' as const
@@ -121,14 +157,25 @@ const CustomersPage = () => {
 
   return (
     <div>
-      <PageHeader 
-        title="고객 관리" 
-        description="등록된 고객 회사 정보를 관리합니다."
-      />
+      <div className="flex items-center justify-between mb-6">
+        <PageHeader 
+          title="고객 관리" 
+          description="등록된 고객 회사 정보를 관리합니다."
+        />
+        <Button 
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center space-x-2"
+        >
+          <Plus className="w-4 h-4" />
+          <span>고객 추가</span>
+        </Button>
+      </div>
+      
       <AlertBanner 
         alerts={alerts} 
         onDismiss={(id) => setAlerts(alerts.filter(a => a.id !== id))} 
       />
+      
       <DataTable 
         data={customers}
         columns={columns}
@@ -136,6 +183,12 @@ const CustomersPage = () => {
         filterFields={filterFields}
         exportable={true}
         tableName="customers"
+      />
+
+      <AddCustomerModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onCustomerAdded={handleCustomerAdded}
       />
     </div>
   );
