@@ -12,6 +12,7 @@ import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import Dashboard from './components/dashboard/Dashboard';
 import CustomersPage from './pages/CustomersPage';
+import CustomerDetailPage from './pages/CustomerDetailPage';
 import ContactsPage from './pages/ContactsPage';
 import ProductsPage from './pages/ProductsPage';
 import PredictionsPage from './pages/PredictionsPage';
@@ -87,6 +88,7 @@ const AppContent = () => {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/customers" element={<CustomersPage />} />
+            <Route path="/customers/:customerId" element={<CustomerDetailPage />} />
             <Route path="/contacts" element={<ContactsPage />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/predictions" element={<PredictionsPage />} />

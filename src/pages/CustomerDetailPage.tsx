@@ -20,11 +20,14 @@ const CustomerDetailPage = () => {
   const [showAddSegmentModal, setShowAddSegmentModal] = useState(false);
   const { toast } = useToast();
 
+  // Convert customerId to number
+  const customerIdNum = customerId ? parseInt(customerId, 10) : null;
+
   useEffect(() => {
-    if (customerId) {
+    if (customerIdNum) {
       fetchCustomerData();
     }
-  }, [customerId]);
+  }, [customerIdNum]);
 
   const fetchCustomerData = async () => {
     try {
@@ -34,7 +37,7 @@ const CustomerDetailPage = () => {
       const { data: customerData, error: customerError } = await supabase
         .from('customers')
         .select('*')
-        .eq('customer_id', customerId)
+        .eq('customer_id', customerIdNum)
         .single();
 
       if (customerError) throw customerError;
@@ -44,7 +47,7 @@ const CustomerDetailPage = () => {
       const { data: contactsData, error: contactsError } = await supabase
         .from('contacts')
         .select('*')
-        .eq('customer_id', customerId)
+        .eq('customer_id', customerIdNum)
         .order('name');
 
       if (contactsError) throw contactsError;
@@ -57,7 +60,7 @@ const CustomerDetailPage = () => {
           *,
           contacts!inner(customer_id, name)
         `)
-        .eq('contacts.customer_id', customerId);
+        .eq('contacts.customer_id', customerIdNum);
 
       if (segmentsError) throw segmentsError;
       setSegments(segmentsData || []);
@@ -96,7 +99,7 @@ const CustomerDetailPage = () => {
     return <div className="text-center py-8">로딩중...</div>;
   }
 
-  if (!customer) {
+  if (!customer || !customerIdNum) {
     return (
       <div className="text-center py-8">
         <p>고객을 찾을 수 없습니다.</p>
@@ -189,14 +192,14 @@ const CustomerDetailPage = () => {
       <AddContactModal
         isOpen={showAddContactModal}
         onClose={() => setShowAddContactModal(false)}
-        customerId={parseInt(customerId!)}
+        customerId={customerIdNum}
         onContactAdded={handleContactAdded}
       />
 
       <AddSegmentModal
         isOpen={showAddSegmentModal}
         onClose={() => setShowAddSegmentModal(false)}
-        customerId={parseInt(customerId!)}
+        customerId={customerIdNum}
         contacts={contacts}
         onSegmentAdded={handleSegmentAdded}
       />
