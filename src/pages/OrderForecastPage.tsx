@@ -68,6 +68,30 @@ const OrderForecastPage = () => {
     }
   ];
 
+  const filterFields = [
+    {
+      key: 'prediction_model',
+      label: '예측 모델',
+      type: 'multiSelect' as const,
+      options: [
+        { value: 'ARIMA', label: 'ARIMA' },
+        { value: 'LinearRegression', label: '선형회귀' },
+        { value: 'RandomForest', label: '랜덤포레스트' },
+        { value: 'NeuralNetwork', label: '신경망' }
+      ]
+    },
+    {
+      key: 'predicted_date',
+      label: '예측 주문일',
+      type: 'dateRange' as const
+    },
+    {
+      key: 'predicted_quantity',
+      label: '예측 수량',
+      type: 'numberRange' as const
+    }
+  ];
+
   if (loading) {
     return <div className="text-center py-8">로딩중...</div>;
   }
@@ -82,6 +106,9 @@ const OrderForecastPage = () => {
         data={forecasts}
         columns={columns}
         searchPlaceholder="고객사, 예측 모델로 검색..."
+        filterFields={filterFields}
+        exportable={true}
+        tableName="customer_order_forecast"
       />
     </div>
   );

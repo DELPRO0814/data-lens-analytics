@@ -70,6 +70,41 @@ const OrdersPage = () => {
     }
   ];
 
+  const filterFields = [
+    {
+      key: 'payment_status',
+      label: '결제상태',
+      type: 'multiSelect' as const,
+      options: [
+        { value: 'Pending', label: '대기중' },
+        { value: 'Paid', label: '결제완료' },
+        { value: 'Failed', label: '결제실패' },
+        { value: 'Refunded', label: '환불' }
+      ]
+    },
+    {
+      key: 'delivery_status',
+      label: '배송상태',
+      type: 'multiSelect' as const,
+      options: [
+        { value: 'Preparing', label: '준비중' },
+        { value: 'Shipped', label: '배송중' },
+        { value: 'Delivered', label: '배송완료' },
+        { value: 'Cancelled', label: '취소' }
+      ]
+    },
+    {
+      key: 'order_date',
+      label: '주문일',
+      type: 'dateRange' as const
+    },
+    {
+      key: 'amount',
+      label: '주문금액',
+      type: 'numberRange' as const
+    }
+  ];
+
   if (loading) {
     return <div className="text-center py-8">로딩중...</div>;
   }
@@ -84,6 +119,9 @@ const OrdersPage = () => {
         data={orders}
         columns={columns}
         searchPlaceholder="주문번호, 고객사로 검색..."
+        filterFields={filterFields}
+        exportable={true}
+        tableName="orders"
       />
     </div>
   );

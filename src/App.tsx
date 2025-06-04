@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -23,6 +24,8 @@ import ClaimsPage from './pages/ClaimsPage';
 import SalesForecastPage from './pages/SalesForecastPage';
 import ProfitGradePage from './pages/ProfitGradePage';
 import OrderForecastPage from './pages/OrderForecastPage';
+import PriorityDashboardPage from './pages/PriorityDashboardPage';
+import OpportunityAnalysisPage from './pages/OpportunityAnalysisPage';
 
 const queryClient = new QueryClient();
 
@@ -96,6 +99,8 @@ const AppContent = () => {
             <Route path="/sales-forecast" element={<SalesForecastPage />} />
             <Route path="/profit-grade" element={<ProfitGradePage />} />
             <Route path="/order-forecast" element={<OrderForecastPage />} />
+            <Route path="/priority-dashboard" element={<PriorityDashboardPage />} />
+            <Route path="/opportunity-analysis" element={<OpportunityAnalysisPage />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>

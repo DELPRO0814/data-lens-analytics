@@ -72,6 +72,30 @@ const ProfitGradePage = () => {
     }
   ];
 
+  const filterFields = [
+    {
+      key: 'customer_grade',
+      label: '수익 등급',
+      type: 'multiSelect' as const,
+      options: [
+        { value: 'A', label: 'A등급' },
+        { value: 'B', label: 'B등급' },
+        { value: 'C', label: 'C등급' },
+        { value: 'D', label: 'D등급' }
+      ]
+    },
+    {
+      key: 'total_sales',
+      label: '총 매출',
+      type: 'numberRange' as const
+    },
+    {
+      key: 'profit_margin',
+      label: '수익률',
+      type: 'numberRange' as const
+    }
+  ];
+
   if (loading) {
     return <div className="text-center py-8">로딩중...</div>;
   }
@@ -86,6 +110,9 @@ const ProfitGradePage = () => {
         data={grades}
         columns={columns}
         searchPlaceholder="고객사, 등급으로 검색..."
+        filterFields={filterFields}
+        exportable={true}
+        tableName="customer_profit_grade"
       />
     </div>
   );

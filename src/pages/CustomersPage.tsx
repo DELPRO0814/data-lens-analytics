@@ -4,14 +4,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/common/PageHeader';
 import DataTable from '@/components/common/DataTable';
+import AlertBanner from '@/components/common/AlertBanner';
 
 const CustomersPage = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [alerts, setAlerts] = useState([]);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchCustomers();
+    // Set up sample alert for demonstration
+    setAlerts([
+      {
+        id: '1',
+        type: 'info',
+        title: '새로운 고객 등록',
+        message: '이번 주에 5개의 새로운 고객이 등록되었습니다.',
+        actionLabel: '확인',
+        onAction: () => setAlerts([])
+      }
+    ]);
   }, []);
 
   const fetchCustomers = async () => {
@@ -49,6 +62,59 @@ const CustomersPage = () => {
     }
   ];
 
+  const filterFields = [
+    {
+      key: 'company_type',
+      label: '회사 유형',
+      type: 'multiSelect' as const,
+      options: [
+        { value: '대기업', label: '대기업' },
+        { value: '중소기업', label: '중소기업' },
+        { value: '스타트업', label: '스타트업' },
+        { value: '공공기관', label: '공공기관' }
+      ]
+    },
+    {
+      key: 'region',
+      label: '지역',
+      type: 'multiSelect' as const,
+      options: [
+        { value: '서울', label: '서울' },
+        { value: '경기', label: '경기' },
+        { value: '부산', label: '부산' },
+        { value: '대구', label: '대구' },
+        { value: '인천', label: '인천' }
+      ]
+    },
+    {
+      key: 'industry_type',
+      label: '업종',
+      type: 'multiSelect' as const,
+      options: [
+        { value: 'IT', label: 'IT' },
+        { value: '제조업', label: '제조업' },
+        { value: '금융', label: '금융' },
+        { value: '교육', label: '교육' },
+        { value: '의료', label: '의료' }
+      ]
+    },
+    {
+      key: 'company_size',
+      label: '회사 규모',
+      type: 'select' as const,
+      options: [
+        { value: '소규모', label: '소규모' },
+        { value: '중규모', label: '중규모' },
+        { value: '대규모', label: '대규모' }
+      ]
+    },
+    {
+      key: 'reg_date',
+      label: '등록일',
+      type: 'dateRange' as const
+    }
+  ];
+
   if (loading) {
     return <div className="text-center py-8">로딩중...</div>;
   }
@@ -59,10 +125,17 @@ const CustomersPage = () => {
         title="고객 관리" 
         description="등록된 고객 회사 정보를 관리합니다."
       />
+      <AlertBanner 
+        alerts={alerts} 
+        onDismiss={(id) => setAlerts(alerts.filter(a => a.id !== id))} 
+      />
       <DataTable 
         data={customers}
         columns={columns}
         searchPlaceholder="회사명, 업종으로 검색..."
+        filterFields={filterFields}
+        exportable={true}
+        tableName="customers"
       />
     </div>
   );

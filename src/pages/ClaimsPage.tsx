@@ -38,7 +38,6 @@ const ClaimsPage = () => {
     }
   };
 
-
   const columns = [
     { key: 'claim_id', label: '클레임번호' },
     { 
@@ -70,6 +69,40 @@ const ClaimsPage = () => {
     }
   ];
 
+  const filterFields = [
+    {
+      key: 'predicted_claim_level',
+      label: '예측 클레임 수준',
+      type: 'multiSelect' as const,
+      options: [
+        { value: 'Low', label: '낮음' },
+        { value: 'Medium', label: '보통' },
+        { value: 'High', label: '높음' }
+      ]
+    },
+    {
+      key: 'predicted_claim_type',
+      label: '예측 클레임 유형',
+      type: 'multiSelect' as const,
+      options: [
+        { value: 'Quality', label: '품질' },
+        { value: 'Delivery', label: '배송' },
+        { value: 'Service', label: '서비스' },
+        { value: 'Warranty', label: '보증' }
+      ]
+    },
+    {
+      key: 'prediction_date',
+      label: '예측일',
+      type: 'dateRange' as const
+    },
+    {
+      key: 'confidence_score',
+      label: '신뢰도',
+      type: 'numberRange' as const
+    }
+  ];
+
   if (loading) {
     return <div className="text-center py-8">로딩중...</div>;
   }
@@ -84,6 +117,9 @@ const ClaimsPage = () => {
         data={claims}
         columns={columns}
         searchPlaceholder="클레임번호, 고객사로 검색..."
+        filterFields={filterFields}
+        exportable={true}
+        tableName="claims"
       />
     </div>
   );

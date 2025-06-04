@@ -57,6 +57,39 @@ const ProductsPage = () => {
     { key: 'notes', label: '비고' }
   ];
 
+  const filterFields = [
+    {
+      key: 'category',
+      label: '카테고리',
+      type: 'multiSelect' as const,
+      options: [
+        { value: 'Monitor', label: '모니터' },
+        { value: 'TV', label: 'TV' },
+        { value: 'Laptop', label: '노트북' },
+        { value: 'Desktop', label: '데스크톱' },
+        { value: 'Tablet', label: '태블릿' }
+      ]
+    },
+    {
+      key: 'inch',
+      label: '크기 (인치)',
+      type: 'slider' as const,
+      min: 10,
+      max: 85,
+      step: 1
+    },
+    {
+      key: 'originalprice',
+      label: '원가',
+      type: 'numberRange' as const
+    },
+    {
+      key: 'sellingprice',
+      label: '판매가',
+      type: 'numberRange' as const
+    }
+  ];
+
   if (loading) {
     return <div className="text-center py-8">로딩중...</div>;
   }
@@ -71,6 +104,9 @@ const ProductsPage = () => {
         data={products}
         columns={columns}
         searchPlaceholder="제품명, 모델명으로 검색..."
+        filterFields={filterFields}
+        exportable={true}
+        tableName="products"
       />
     </div>
   );

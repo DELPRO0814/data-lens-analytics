@@ -62,6 +62,24 @@ const PredictionsPage = () => {
     }
   ];
 
+  const filterFields = [
+    {
+      key: 'predicted_product',
+      label: '예측 제품',
+      type: 'text' as const
+    },
+    {
+      key: 'predicted_quantity',
+      label: '예측 수량',
+      type: 'numberRange' as const
+    },
+    {
+      key: 'predicted_date',
+      label: '예측 날짜',
+      type: 'dateRange' as const
+    }
+  ];
+
   if (loading) {
     return <div className="text-center py-8">로딩중...</div>;
   }
@@ -76,6 +94,9 @@ const PredictionsPage = () => {
         data={predictions}
         columns={columns}
         searchPlaceholder="고객사, 제품명으로 검색..."
+        filterFields={filterFields}
+        exportable={true}
+        tableName="predictions"
       />
     </div>
   );

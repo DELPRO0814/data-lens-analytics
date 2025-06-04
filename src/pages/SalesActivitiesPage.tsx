@@ -60,6 +60,37 @@ const SalesActivitiesPage = () => {
     }
   ];
 
+  const filterFields = [
+    {
+      key: 'activity_type',
+      label: '활동 유형',
+      type: 'multiSelect' as const,
+      options: [
+        { value: 'Call', label: '전화' },
+        { value: 'Meeting', label: '회의' },
+        { value: 'Email', label: '이메일' },
+        { value: 'Presentation', label: '프레젠테이션' },
+        { value: 'Demo', label: '데모' }
+      ]
+    },
+    {
+      key: 'activity_date',
+      label: '활동 날짜',
+      type: 'dateRange' as const
+    },
+    {
+      key: 'outcome',
+      label: '결과',
+      type: 'multiSelect' as const,
+      options: [
+        { value: 'Success', label: '성공' },
+        { value: 'Follow-up', label: '후속조치' },
+        { value: 'Postponed', label: '연기' },
+        { value: 'Rejected', label: '거절' }
+      ]
+    }
+  ];
+
   if (loading) {
     return <div className="text-center py-8">로딩중...</div>;
   }
@@ -74,6 +105,9 @@ const SalesActivitiesPage = () => {
         data={activities}
         columns={columns}
         searchPlaceholder="고객사, 활동 유형으로 검색..."
+        filterFields={filterFields}
+        exportable={true}
+        tableName="sales_activities"
       />
     </div>
   );

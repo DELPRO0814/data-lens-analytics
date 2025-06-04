@@ -62,6 +62,33 @@ const EngagementsPage = () => {
     }
   ];
 
+  const filterFields = [
+    {
+      key: 'newsletter_opens',
+      label: '뉴스레터 열람 수',
+      type: 'numberRange' as const
+    },
+    {
+      key: 'site_visits',
+      label: '사이트 방문 수',
+      type: 'numberRange' as const
+    },
+    {
+      key: 'survey_response',
+      label: '설문 응답',
+      type: 'multiSelect' as const,
+      options: [
+        { value: 'Y', label: '응답함' },
+        { value: 'N', label: '응답안함' }
+      ]
+    },
+    {
+      key: 'last_active_date',
+      label: '최근 활동일',
+      type: 'dateRange' as const
+    }
+  ];
+
   if (loading) {
     return <div className="text-center py-8">로딩중...</div>;
   }
@@ -76,6 +103,9 @@ const EngagementsPage = () => {
         data={engagements}
         columns={columns}
         searchPlaceholder="고객사, 활동으로 검색..."
+        filterFields={filterFields}
+        exportable={true}
+        tableName="engagements"
       />
     </div>
   );
