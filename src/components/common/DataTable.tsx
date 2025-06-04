@@ -3,7 +3,8 @@ import React, { useState, useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { Search, Download, FileText, FileSpreadsheet, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import AdvancedFilter from './AdvancedFilter';
 
 interface DataTableProps {
@@ -26,6 +27,7 @@ interface DataTableProps {
   }>;
   exportable?: boolean;
   tableName?: string;
+  pageSize?: number;
 }
 
 const DataTable: React.FC<DataTableProps> = ({ 
@@ -35,10 +37,12 @@ const DataTable: React.FC<DataTableProps> = ({
   onRowClick,
   filterFields = [],
   exportable = false,
-  tableName = "data"
+  tableName = "data",
+  pageSize = 15
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [advancedFilters, setAdvancedFilters] = useState<Record<string, any>>({});
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filteredData = useMemo(() => {
     let filtered = data;
@@ -100,6 +104,17 @@ const DataTable: React.FC<DataTableProps> = ({
     return filtered;
   }, [data, searchTerm, advancedFilters, filterFields]);
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredData.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, advancedFilters]);
+
   const exportToCSV = () => {
     const headers = columns.map(col => col.label);
     const csvContent = [
@@ -134,6 +149,40 @@ const DataTable: React.FC<DataTableProps> = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const getVisiblePages = () => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+
+    for (let i = Math.max(2, currentPage - delta); 
+         i <= Math.min(totalPages - 1, currentPage + delta); 
+         i++) {
+      range.push(i);
+    }
+
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, '...');
+    } else {
+      rangeWithDots.push(1);
+    }
+
+    rangeWithDots.push(...range);
+
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push('...', totalPages);
+    } else if (totalPages > 1) {
+      rangeWithDots.push(totalPages);
+    }
+
+    return rangeWithDots;
   };
 
   return (
@@ -173,9 +222,21 @@ const DataTable: React.FC<DataTableProps> = ({
         />
       )}
 
-      {/* Results Count */}
-      <div className="text-sm text-gray-600">
-        총 {filteredData.length}개 항목 (전체 {data.length}개 중)
+      {/* Results Count and Pagination Info */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0 text-sm text-gray-600">
+        <div>
+          총 {filteredData.length}개 항목 (전체 {data.length}개 중) 
+          {filteredData.length > 0 && (
+            <span className="ml-2">
+              {startIndex + 1}-{Math.min(endIndex, filteredData.length)} 표시
+            </span>
+          )}
+        </div>
+        {totalPages > 1 && (
+          <div className="text-sm">
+            페이지 {currentPage} / {totalPages}
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -191,7 +252,7 @@ const DataTable: React.FC<DataTableProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredData.map((row, index) => (
+            {paginatedData.map((row, index) => (
               <TableRow 
                 key={index} 
                 className={onRowClick ? "cursor-pointer hover:bg-muted/50" : ""}
@@ -211,12 +272,63 @@ const DataTable: React.FC<DataTableProps> = ({
         </Table>
       </div>
 
-      {filteredData.length === 0 && (
+      {paginatedData.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           {searchTerm || Object.keys(advancedFilters).length > 0 
             ? "검색 결과가 없습니다." 
             : "데이터가 없습니다."
           }
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  이전
+                </Button>
+              </PaginationItem>
+              
+              {getVisiblePages().map((page, index) => (
+                <PaginationItem key={index}>
+                  {page === '...' ? (
+                    <span className="px-3 py-2">...</span>
+                  ) : (
+                    <PaginationLink
+                      onClick={() => handlePageChange(page as number)}
+                      isActive={currentPage === page}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  )}
+                </PaginationItem>
+              ))}
+              
+              <PaginationItem>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1"
+                >
+                  다음
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       )}
     </div>

@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Edit } from 'lucide-react';
+import { Edit, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 import EditSegmentModal from './EditSegmentModal';
 
 interface SegmentsSectionProps {
@@ -13,12 +15,59 @@ const SegmentsSection: React.FC<SegmentsSectionProps> = ({ segments, onSegmentUp
   const [riskLevelFilter, setRiskLevelFilter] = useState('');
   const [segmentLabelFilter, setSegmentLabelFilter] = useState('');
   const [editingSegment, setEditingSegment] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 15;
 
   const filteredSegments = segments.filter(segment => {
     const matchesRiskLevel = riskLevelFilter === 'all' || !riskLevelFilter || segment.predicted_risk_level === riskLevelFilter;
     const matchesSegmentLabel = segmentLabelFilter === 'all' || !segmentLabelFilter || segment.segment_label === segmentLabelFilter;
     return matchesRiskLevel && matchesSegmentLabel;
   });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredSegments.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedSegments = filteredSegments.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [riskLevelFilter, segmentLabelFilter]);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const getVisiblePages = () => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+
+    for (let i = Math.max(2, currentPage - delta); 
+         i <= Math.min(totalPages - 1, currentPage + delta); 
+         i++) {
+      range.push(i);
+    }
+
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, '...');
+    } else {
+      rangeWithDots.push(1);
+    }
+
+    rangeWithDots.push(...range);
+
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push('...', totalPages);
+    } else if (totalPages > 1) {
+      rangeWithDots.push(totalPages);
+    }
+
+    return rangeWithDots;
+  };
 
   const uniqueSegmentLabels = [...new Set(segments.map(s => s.segment_label).filter(Boolean))];
 
@@ -51,8 +100,18 @@ const SegmentsSection: React.FC<SegmentsSectionProps> = ({ segments, onSegmentUp
         </Select>
       </div>
 
+      {/* Results Count */}
+      <div className="mb-4 text-sm text-gray-600">
+        총 {filteredSegments.length}개 세그먼트 
+        {filteredSegments.length > 0 && (
+          <span className="ml-2">
+            ({startIndex + 1}-{Math.min(endIndex, filteredSegments.length)} 표시)
+          </span>
+        )}
+      </div>
+
       {/* Table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto mb-4">
         <table className="w-full border-collapse border border-gray-300">
           <thead>
             <tr className="bg-gray-50">
@@ -66,14 +125,14 @@ const SegmentsSection: React.FC<SegmentsSectionProps> = ({ segments, onSegmentUp
             </tr>
           </thead>
           <tbody>
-            {filteredSegments.length === 0 ? (
+            {paginatedSegments.length === 0 ? (
               <tr>
                 <td colSpan={7} className="border border-gray-300 px-4 py-8 text-center text-gray-500">
                   세그먼트가 없습니다.
                 </td>
               </tr>
             ) : (
-              filteredSegments.map(segment => (
+              paginatedSegments.map(segment => (
                 <tr key={segment.contact_id} className="hover:bg-gray-50">
                   <td className="border border-gray-300 px-4 py-2">
                     {segment.contacts?.name || '-'}
@@ -112,6 +171,53 @@ const SegmentsSection: React.FC<SegmentsSectionProps> = ({ segments, onSegmentUp
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                이전
+              </Button>
+              
+              {getVisiblePages().map((page, index) => (
+                <PaginationItem key={index}>
+                  {page === '...' ? (
+                    <span className="px-3 py-2">...</span>
+                  ) : (
+                    <PaginationLink
+                      onClick={() => handlePageChange(page as number)}
+                      isActive={currentPage === page}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  )}
+                </PaginationItem>
+              ))}
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1"
+              >
+                다음
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       {editingSegment && (
         <EditSegmentModal
