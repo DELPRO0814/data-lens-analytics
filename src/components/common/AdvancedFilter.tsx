@@ -56,12 +56,12 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ fields, onFilterChange,
 
       case 'select':
         return (
-          <Select value={value || ''} onValueChange={(val) => handleFilterChange(field.key, val)}>
+          <Select value={value || 'all'} onValueChange={(val) => handleFilterChange(field.key, val === 'all' ? '' : val)}>
             <SelectTrigger>
               <SelectValue placeholder={`${field.label} 선택`} />
             </SelectTrigger>
             <SelectContent className="bg-white border shadow-lg z-50">
-              <SelectItem value="">전체</SelectItem>
+              <SelectItem value="all">전체</SelectItem>
               {field.options?.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
