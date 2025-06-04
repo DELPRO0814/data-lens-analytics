@@ -150,9 +150,9 @@ const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
                   <SelectValue placeholder="회사 규모 선택" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border shadow-lg z-50">
-                  <SelectItem value="소규모">소규모</SelectItem>
-                  <SelectItem value="중규모">중규모</SelectItem>
-                  <SelectItem value="대규모">대규모</SelectItem>
+                  <SelectItem value="중소기업">중소기업</SelectItem>
+                  <SelectItem value="중견기업">중견기업</SelectItem>
+                  <SelectItem value="대기업">대기업</SelectItem>
                 </SelectContent>
               </Select>
             </div>

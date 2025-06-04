@@ -175,13 +175,13 @@ const CustomerDetailPage = () => {
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">세그먼트</h2>
-              <Button 
+              {/* <Button 
                 onClick={() => setShowAddSegmentModal(true)}
                 className="flex items-center space-x-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>세그먼트 추가</span>
-              </Button>
+              </Button> */}
             </div>
           </div>
           <SegmentsSection segments={segments} onSegmentUpdated={fetchCustomerData} />
