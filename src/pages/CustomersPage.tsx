@@ -20,16 +20,16 @@ const CustomersPage = () => {
   useEffect(() => {
     fetchCustomers();
     // Set up sample alert for demonstration
-    setAlerts([
-      {
-        id: '1',
-        type: 'info',
-        title: '새로운 고객 등록',
-        message: '이번 주에 5개의 새로운 고객이 등록되었습니다.',
-        actionLabel: '확인',
-        onAction: () => setAlerts([])
-      }
-    ]);
+    // setAlerts([
+    //   {
+    //     id: '1',
+    //     type: 'info',
+    //     title: '새로운 고객 등록',
+    //     message: '이번 주에 5개의 새로운 고객이 등록되었습니다.',
+    //     actionLabel: '확인',
+    //     onAction: () => setAlerts([])
+    //   }
+    // ]);
   }, []);
 
   const fetchCustomers = async () => {

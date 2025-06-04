@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,8 +15,8 @@ const SegmentsSection: React.FC<SegmentsSectionProps> = ({ segments, onSegmentUp
   const [editingSegment, setEditingSegment] = useState(null);
 
   const filteredSegments = segments.filter(segment => {
-    const matchesRiskLevel = !riskLevelFilter || segment.predicted_risk_level === riskLevelFilter;
-    const matchesSegmentLabel = !segmentLabelFilter || segment.segment_label === segmentLabelFilter;
+    const matchesRiskLevel = riskLevelFilter === 'all' || !riskLevelFilter || segment.predicted_risk_level === riskLevelFilter;
+    const matchesSegmentLabel = segmentLabelFilter === 'all' || !segmentLabelFilter || segment.segment_label === segmentLabelFilter;
     return matchesRiskLevel && matchesSegmentLabel;
   });
 
