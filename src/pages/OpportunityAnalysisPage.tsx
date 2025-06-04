@@ -206,7 +206,7 @@ const OpportunityAnalysisPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {Math.round((stats.expectedRevenue || 0) / 1000000).toLocaleString()}M원
+              {Math.round((typeof stats.expectedRevenue === 'number' ? stats.expectedRevenue : 0) / 1000000).toLocaleString()}M원
             </div>
             <p className="text-xs text-muted-foreground">총 예상 매출</p>
           </CardContent>
@@ -219,7 +219,7 @@ const OpportunityAnalysisPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {(stats.avgAccuracy || 0).toFixed(1)}%
+              {(typeof stats.avgAccuracy === 'number' ? stats.avgAccuracy : 0).toFixed(1)}%
             </div>
             <p className="text-xs text-muted-foreground">예측 정확도</p>
           </CardContent>
@@ -251,7 +251,7 @@ const OpportunityAnalysisPage = () => {
                 <YAxis />
                 <Tooltip 
                   formatter={(value, name) => [
-                    name === 'revenue' ? `${((value || 0) / 1000000).toFixed(1)}M원` : value,
+                    name === 'revenue' ? `${((typeof value === 'number' ? value : 0) / 1000000).toFixed(1)}M원` : value,
                     name === 'revenue' ? '예상 매출' : name === 'contacts' ? '접촉 예정' : '주문 예정'
                   ]}
                 />
@@ -280,7 +280,7 @@ const OpportunityAnalysisPage = () => {
                   fontSize={12}
                 />
                 <Tooltip 
-                  formatter={(value) => [`${((value || 0) / 1000000).toFixed(1)}M원`, '예상 매출']}
+                  formatter={(value) => [`${((typeof value === 'number' ? value : 0) / 1000000).toFixed(1)}M원`, '예상 매출']}
                 />
                 <Bar dataKey="expectedRevenue" fill="#8884d8" />
               </BarChart>
@@ -322,10 +322,10 @@ const OpportunityAnalysisPage = () => {
                       {new Date(opportunity.date).toLocaleDateString()}
                     </td>
                     <td className="border border-gray-300 px-4 py-2">
-                      {((opportunity.expectedRevenue || 0) / 1000000).toFixed(1)}M원
+                      {((typeof opportunity.expectedRevenue === 'number' ? opportunity.expectedRevenue : 0) / 1000000).toFixed(1)}M원
                     </td>
                     <td className="border border-gray-300 px-4 py-2">
-                      {((opportunity.accuracy || 0) * 100).toFixed(1)}%
+                      {((typeof opportunity.accuracy === 'number' ? opportunity.accuracy : 0) * 100).toFixed(1)}%
                     </td>
                     <td className="border border-gray-300 px-4 py-2">
                       <span className={`px-2 py-1 rounded text-sm ${
