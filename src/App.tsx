@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -27,7 +26,7 @@ import OrderForecastPage from './pages/OrderForecastPage';
 
 const queryClient = new QueryClient();
 
-const App = () => {
+const AppContent = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,60 +62,57 @@ const App = () => {
   }
 
   if (!session) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <BrowserRouter>
-            <AuthPage />
-            <Toaster />
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    );
+    return <AuthPage />;
   }
 
   return (
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        isCollapsed={sidebarCollapsed}
+        onCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
+      
+      <div className="flex-1 flex flex-col min-w-0">
+        <Header 
+          onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+          user={user}
+        />
+        
+        <main className="flex-1 overflow-auto p-6">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/customers" element={<CustomersPage />} />
+            <Route path="/contacts" element={<ContactsPage />} />
+            <Route path="/products" element={<ProductsPage />} />
+            <Route path="/predictions" element={<PredictionsPage />} />
+            <Route path="/segments" element={<SegmentsPage />} />
+            <Route path="/sales-activities" element={<SalesActivitiesPage />} />
+            <Route path="/engagements" element={<EngagementsPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/issues" element={<IssuesPage />} />
+            <Route path="/claims" element={<ClaimsPage />} />
+            <Route path="/sales-forecast" element={<SalesForecastPage />} />
+            <Route path="/profit-grade" element={<ProfitGradePage />} />
+            <Route path="/order-forecast" element={<OrderForecastPage />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </main>
+      </div>
+    </div>
+  );
+};
+
+const App = () => {
+  return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <BrowserRouter>
-          <div className="flex h-screen bg-gray-50">
-            <Sidebar 
-              isOpen={sidebarOpen} 
-              onToggle={() => setSidebarOpen(!sidebarOpen)}
-              isCollapsed={sidebarCollapsed}
-              onCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-            />
-            
-            <div className="flex-1 flex flex-col min-w-0">
-              <Header 
-                onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
-                user={user}
-              />
-              
-              <main className="flex-1 overflow-auto p-6">
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/customers" element={<CustomersPage />} />
-                  <Route path="/contacts" element={<ContactsPage />} />
-                  <Route path="/products" element={<ProductsPage />} />
-                  <Route path="/predictions" element={<PredictionsPage />} />
-                  <Route path="/segments" element={<SegmentsPage />} />
-                  <Route path="/sales-activities" element={<SalesActivitiesPage />} />
-                  <Route path="/engagements" element={<EngagementsPage />} />
-                  <Route path="/orders" element={<OrdersPage />} />
-                  <Route path="/issues" element={<IssuesPage />} />
-                  <Route path="/claims" element={<ClaimsPage />} />
-                  <Route path="/sales-forecast" element={<SalesForecastPage />} />
-                  <Route path="/profit-grade" element={<ProfitGradePage />} />
-                  <Route path="/order-forecast" element={<OrderForecastPage />} />
-                  <Route path="*" element={<Navigate to="/" />} />
-                </Routes>
-              </main>
-            </div>
-          </div>
+      <BrowserRouter>
+        <TooltipProvider>
+          <AppContent />
           <Toaster />
-        </BrowserRouter>
-      </TooltipProvider>
+        </TooltipProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 };
