@@ -5,6 +5,8 @@ import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/common/PageHeader';
 import DataTable from '@/components/common/DataTable';
 
+type BinaryFlag = '0' | '1';
+
 const ContactsPage = () => {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +39,7 @@ const ContactsPage = () => {
       setLoading(false);
     }
   };
+  
 
   const columns = [
     { key: 'name', label: '이름' },
