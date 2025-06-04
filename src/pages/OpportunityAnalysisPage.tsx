@@ -103,7 +103,7 @@ const OpportunityAnalysisPage = () => {
 
       // 상위 기회 정렬
       const topOpportunities = combinedOpportunities
-        .sort((a, b) => b.expectedRevenue - a.expectedRevenue)
+        .sort((a, b) => (b.expectedRevenue || 0) - (a.expectedRevenue || 0))
         .slice(0, 10);
 
       setOpportunities(topOpportunities);
@@ -115,7 +115,7 @@ const OpportunityAnalysisPage = () => {
         if (!monthlyData[month]) {
           monthlyData[month] = { month, revenue: 0, contacts: 0, orders: 0 };
         }
-        monthlyData[month].revenue += opp.expectedRevenue;
+        monthlyData[month].revenue += (opp.expectedRevenue || 0);
         if (opp.type === 'contact') monthlyData[month].contacts++;
         if (opp.type === 'order') monthlyData[month].orders++;
       });
@@ -131,10 +131,15 @@ const OpportunityAnalysisPage = () => {
         return oppDate >= today && oppDate <= nextWeek;
       }).length;
 
+      const totalRevenue = combinedOpportunities.reduce((sum, opp) => sum + (opp.expectedRevenue || 0), 0);
+      const avgAccuracy = combinedOpportunities.length > 0 
+        ? combinedOpportunities.reduce((sum, opp) => sum + (opp.accuracy || 0), 0) / combinedOpportunities.length * 100
+        : 0;
+
       setStats({
         totalOpportunities: combinedOpportunities.length,
-        expectedRevenue: combinedOpportunities.reduce((sum, opp) => sum + opp.expectedRevenue, 0),
-        avgAccuracy: combinedOpportunities.reduce((sum, opp) => sum + opp.accuracy, 0) / combinedOpportunities.length * 100,
+        expectedRevenue: totalRevenue,
+        avgAccuracy: avgAccuracy,
         upcomingContacts: upcomingCount
       });
 
@@ -181,7 +186,7 @@ const OpportunityAnalysisPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {Math.round(stats.expectedRevenue / 1000000).toLocaleString()}M원
+              {Math.round((stats.expectedRevenue || 0) / 1000000).toLocaleString()}M원
             </div>
             <p className="text-xs text-muted-foreground">총 예상 매출</p>
           </CardContent>
@@ -194,7 +199,7 @@ const OpportunityAnalysisPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {stats.avgAccuracy.toFixed(1)}%
+              {(stats.avgAccuracy || 0).toFixed(1)}%
             </div>
             <p className="text-xs text-muted-foreground">예측 정확도</p>
           </CardContent>
@@ -226,7 +231,7 @@ const OpportunityAnalysisPage = () => {
                 <YAxis />
                 <Tooltip 
                   formatter={(value, name) => [
-                    name === 'revenue' ? `${(value / 1000000).toFixed(1)}M원` : value,
+                    name === 'revenue' ? `${((value || 0) / 1000000).toFixed(1)}M원` : value,
                     name === 'revenue' ? '예상 매출' : name === 'contacts' ? '접촉 예정' : '주문 예정'
                   ]}
                 />
@@ -255,7 +260,7 @@ const OpportunityAnalysisPage = () => {
                   fontSize={12}
                 />
                 <Tooltip 
-                  formatter={(value) => [`${(value / 1000000).toFixed(1)}M원`, '예상 매출']}
+                  formatter={(value) => [`${((value || 0) / 1000000).toFixed(1)}M원`, '예상 매출']}
                 />
                 <Bar dataKey="expectedRevenue" fill="#8884d8" />
               </BarChart>
@@ -297,10 +302,10 @@ const OpportunityAnalysisPage = () => {
                       {new Date(opportunity.date).toLocaleDateString()}
                     </td>
                     <td className="border border-gray-300 px-4 py-2">
-                      {(opportunity.expectedRevenue / 1000000).toFixed(1)}M원
+                      {((opportunity.expectedRevenue || 0) / 1000000).toFixed(1)}M원
                     </td>
                     <td className="border border-gray-300 px-4 py-2">
-                      {(opportunity.accuracy * 100).toFixed(1)}%
+                      {((opportunity.accuracy || 0) * 100).toFixed(1)}%
                     </td>
                     <td className="border border-gray-300 px-4 py-2">
                       <span className={`px-2 py-1 rounded text-sm ${

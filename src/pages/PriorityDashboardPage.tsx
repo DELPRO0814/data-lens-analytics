@@ -7,8 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { AlertTriangle, TrendingUp, DollarSign, Calendar } from 'lucide-react';
 
+interface CombinedCustomerData {
+  company: string;
+  contact: string;
+  clv: number;
+  riskLevel: string;
+  claimProbability: number;
+  lastActivity: string | null;
+}
+
 const PriorityDashboardPage = () => {
-  const [highRiskCustomers, setHighRiskCustomers] = useState([]);
+  const [highRiskCustomers, setHighRiskCustomers] = useState<CombinedCustomerData[]>([]);
   const [stats, setStats] = useState({
     totalHighRisk: 0,
     totalClaimRisk: 0,
@@ -30,7 +39,7 @@ const PriorityDashboardPage = () => {
         .from('segments')
         .select(`
           *,
-          contacts(name, customers(company_name))
+          contacts(name, customers(company_name, customer_id))
         `)
         .eq('predicted_risk_level', 'High')
         .order('clv', { ascending: false });
@@ -42,7 +51,7 @@ const PriorityDashboardPage = () => {
         .from('claims')
         .select(`
           *,
-          contacts(name, customers(company_name))
+          contacts(name, customers(company_name, customer_id))
         `)
         .eq('predicted_claim_level', 'High')
         .gte('predicted_claim_probability', 0.7);
@@ -67,37 +76,65 @@ const PriorityDashboardPage = () => {
       if (issueError) throw issueError;
 
       // 데이터 결합 및 처리
-      const combinedData = [...(segmentData || []), ...(claimData || [])];
-      const uniqueCustomers = combinedData.reduce((acc, curr) => {
-        const key = curr.contacts?.customers?.company_name;
-        if (!acc[key]) {
-          acc[key] = {
+      const combinedData: Record<string, CombinedCustomerData> = {};
+      
+      // 세그먼트 데이터 처리
+      segmentData?.forEach(segment => {
+        const key = segment.contacts?.customers?.company_name;
+        if (key && !combinedData[key]) {
+          combinedData[key] = {
             company: key,
-            contact: curr.contacts?.name,
-            clv: curr.clv || 0,
-            riskLevel: curr.predicted_risk_level || curr.predicted_claim_level,
-            claimProbability: curr.predicted_claim_probability || 0,
-            lastActivity: activityData?.find(a => a.customer_id === curr.contacts?.customers?.customer_id)?.activity_date
+            contact: segment.contacts?.name || '',
+            clv: segment.clv || 0,
+            riskLevel: segment.predicted_risk_level || 'Unknown',
+            claimProbability: 0,
+            lastActivity: activityData?.find(a => a.customer_id === segment.contacts?.customers?.customer_id)?.activity_date || null
           };
         }
-        return acc;
-      }, {});
+      });
 
-      const priorityCustomers = Object.values(uniqueCustomers);
+      // 클레임 데이터 처리
+      claimData?.forEach(claim => {
+        const key = claim.contacts?.customers?.company_name;
+        if (key) {
+          if (!combinedData[key]) {
+            combinedData[key] = {
+              company: key,
+              contact: claim.contacts?.name || '',
+              clv: 0,
+              riskLevel: claim.predicted_claim_level || 'Unknown',
+              claimProbability: claim.predicted_claim_probability || 0,
+              lastActivity: activityData?.find(a => a.customer_id === claim.contacts?.customers?.customer_id)?.activity_date || null
+            };
+          } else {
+            combinedData[key].claimProbability = claim.predicted_claim_probability || 0;
+            if (!combinedData[key].riskLevel || combinedData[key].riskLevel === 'Unknown') {
+              combinedData[key].riskLevel = claim.predicted_claim_level || 'Unknown';
+            }
+          }
+        }
+      });
+
+      const priorityCustomers = Object.values(combinedData);
       setHighRiskCustomers(priorityCustomers);
 
       // 통계 계산
+      const segmentCount = segmentData?.length || 0;
+      const claimCount = claimData?.length || 0;
+      const totalCLV = segmentData?.reduce((sum, item) => sum + (item.clv || 0), 0) || 0;
+      const avgCLV = segmentCount > 0 ? totalCLV / segmentCount : 0;
+
       setStats({
-        totalHighRisk: segmentData?.length || 0,
-        totalClaimRisk: claimData?.length || 0,
-        avgCLV: segmentData?.reduce((sum, item) => sum + (item.clv || 0), 0) / (segmentData?.length || 1),
+        totalHighRisk: segmentCount,
+        totalClaimRisk: claimCount,
+        avgCLV: avgCLV,
         urgentIssues: issueData?.length || 0
       });
 
       // 차트 데이터 준비
       const riskLevelChart = [
-        { name: '세그먼트 위험', value: segmentData?.length || 0, color: '#ff6b6b' },
-        { name: '클레임 위험', value: claimData?.length || 0, color: '#feca57' },
+        { name: '세그먼트 위험', value: segmentCount, color: '#ff6b6b' },
+        { name: '클레임 위험', value: claimCount, color: '#feca57' },
         { name: '미해결 이슈', value: issueData?.length || 0, color: '#ff9ff3' }
       ];
       setChartData(riskLevelChart);
