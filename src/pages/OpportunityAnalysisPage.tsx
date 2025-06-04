@@ -70,16 +70,20 @@ const OpportunityAnalysisPage = () => {
           profit.contacts?.customers?.company_name === contact.customers?.company_name
         );
 
+        const contactMape = typeof contact.scf_mape === 'number' ? contact.scf_mape : 0;
+        const profitSales = typeof relatedProfit?.total_sales === 'number' ? relatedProfit.total_sales : 0;
+        const orderQuantity = typeof relatedOrder?.predicted_quantity === 'number' ? Number(relatedOrder.predicted_quantity) : 0;
+
         combinedOpportunities.push({
           id: `contact-${contact.scf_id}`,
           type: 'contact',
           company: contact.customers?.company_name,
           date: contact.scf_recommended_date,
           contactType: contact.scf_type,
-          accuracy: 1 - (contact.scf_mape || 0),
-          expectedRevenue: relatedProfit?.total_sales || 0,
-          expectedQuantity: relatedOrder?.predicted_quantity || 0,
-          priority: contact.scf_mape < 0.1 ? 'High' : contact.scf_mape < 0.3 ? 'Medium' : 'Low'
+          accuracy: 1 - contactMape,
+          expectedRevenue: profitSales,
+          expectedQuantity: orderQuantity,
+          priority: contactMape < 0.1 ? 'High' : contactMape < 0.3 ? 'Medium' : 'Low'
         });
       });
 
@@ -88,22 +92,30 @@ const OpportunityAnalysisPage = () => {
           profit.contacts?.customers?.company_name === order.customers?.company_name
         );
 
+        const orderMape = typeof order.mape === 'number' ? Number(order.mape) : 0;
+        const profitSales = typeof relatedProfit?.total_sales === 'number' ? relatedProfit.total_sales : 0;
+        const orderQuantity = typeof order.predicted_quantity === 'number' ? Number(order.predicted_quantity) : 0;
+
         combinedOpportunities.push({
           id: `order-${order.cof_id}`,
           type: 'order',
           company: order.customers?.company_name,
           date: order.predicted_date,
           model: order.prediction_model,
-          accuracy: 1 - (order.mape || 0),
-          expectedRevenue: relatedProfit?.total_sales || 0,
-          expectedQuantity: order.predicted_quantity,
-          priority: order.mape < 0.1 ? 'High' : order.mape < 0.3 ? 'Medium' : 'Low'
+          accuracy: 1 - orderMape,
+          expectedRevenue: profitSales,
+          expectedQuantity: orderQuantity,
+          priority: orderMape < 0.1 ? 'High' : orderMape < 0.3 ? 'Medium' : 'Low'
         });
       });
 
       // 상위 기회 정렬
       const topOpportunities = combinedOpportunities
-        .sort((a, b) => (b.expectedRevenue || 0) - (a.expectedRevenue || 0))
+        .sort((a, b) => {
+          const aRevenue = typeof a.expectedRevenue === 'number' ? a.expectedRevenue : 0;
+          const bRevenue = typeof b.expectedRevenue === 'number' ? b.expectedRevenue : 0;
+          return bRevenue - aRevenue;
+        })
         .slice(0, 10);
 
       setOpportunities(topOpportunities);
@@ -115,7 +127,8 @@ const OpportunityAnalysisPage = () => {
         if (!monthlyData[month]) {
           monthlyData[month] = { month, revenue: 0, contacts: 0, orders: 0 };
         }
-        monthlyData[month].revenue += (opp.expectedRevenue || 0);
+        const oppRevenue = typeof opp.expectedRevenue === 'number' ? opp.expectedRevenue : 0;
+        monthlyData[month].revenue += oppRevenue;
         if (opp.type === 'contact') monthlyData[month].contacts++;
         if (opp.type === 'order') monthlyData[month].orders++;
       });
@@ -131,9 +144,16 @@ const OpportunityAnalysisPage = () => {
         return oppDate >= today && oppDate <= nextWeek;
       }).length;
 
-      const totalRevenue = combinedOpportunities.reduce((sum, opp) => sum + (opp.expectedRevenue || 0), 0);
+      const totalRevenue = combinedOpportunities.reduce((sum, opp) => {
+        const oppRevenue = typeof opp.expectedRevenue === 'number' ? opp.expectedRevenue : 0;
+        return sum + oppRevenue;
+      }, 0);
+      
       const avgAccuracy = combinedOpportunities.length > 0 
-        ? combinedOpportunities.reduce((sum, opp) => sum + (opp.accuracy || 0), 0) / combinedOpportunities.length * 100
+        ? combinedOpportunities.reduce((sum, opp) => {
+            const oppAccuracy = typeof opp.accuracy === 'number' ? opp.accuracy : 0;
+            return sum + oppAccuracy;
+          }, 0) / combinedOpportunities.length * 100
         : 0;
 
       setStats({
