@@ -30,7 +30,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, user }) => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b h-16 flex items-center justify-between px-4">
+    <header className="bg-white shadow-sm border-b h-16 flex items-center justify-between px-4 relative z-10">
       <button
         onClick={onMenuToggle}
         className="p-2 rounded-lg hover:bg-gray-100 md:hidden"

@@ -32,6 +32,7 @@ const App = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     // 인증 상태 변화 감지
@@ -81,7 +82,9 @@ const App = () => {
           <div className="flex h-screen bg-gray-50">
             <Sidebar 
               isOpen={sidebarOpen} 
-              onToggle={() => setSidebarOpen(!sidebarOpen)} 
+              onToggle={() => setSidebarOpen(!sidebarOpen)}
+              isCollapsed={sidebarCollapsed}
+              onCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
             />
             
             <div className="flex-1 flex flex-col min-w-0">

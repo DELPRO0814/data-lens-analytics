@@ -87,7 +87,15 @@ export type Database = {
           position?: string | null
           preferred_channel?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contacts_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["customer_id"]
+          },
+        ]
       }
       customer_order_forecast: {
         Row: {
@@ -117,7 +125,15 @@ export type Database = {
           predicted_quantity?: number | null
           prediction_model?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customer_order_forecast_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["customer_id"]
+          },
+        ]
       }
       customer_profit_analysis: {
         Row: {
@@ -247,7 +263,15 @@ export type Database = {
           site_visits?: number | null
           survey_response?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "engagements_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["customer_id"]
+          },
+        ]
       }
       issues: {
         Row: {
@@ -436,11 +460,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_sales_activities_contact"
+            foreignKeyName: "sales_activities_contact_id_fkey"
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
             referencedColumns: ["contact_id"]
+          },
+          {
+            foreignKeyName: "sales_activities_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["customer_id"]
           },
         ]
       }
@@ -469,7 +500,15 @@ export type Database = {
           scf_recommended_date?: string
           scf_type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sales_contact_forecast_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["customer_id"]
+          },
+        ]
       }
       segments: {
         Row: {
@@ -500,7 +539,7 @@ export type Database = {
           {
             foreignKeyName: "fk_segments_contact"
             columns: ["contact_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "contacts"
             referencedColumns: ["contact_id"]
           },
