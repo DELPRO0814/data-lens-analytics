@@ -93,6 +93,14 @@ const DataTable: React.FC<DataTableProps> = ({
       filtered = filtered.filter(row => {
         const rowValue = row[key];
 
+        /////////////////////////////////////////테스트///////////////
+        if (field.key === 'predicted_claim_type' && field.type === 'multiSelect') {
+          // value: 선택된 값들의 배열. '기타'는 ['없음', '알 수 없음'] 배열로 들어올 수 있음
+          // value.flat()으로 펼치고 중복 제거
+          const selected = value.flat ? Array.from(new Set(value.flat())) : value;
+          return selected.includes(rowValue);
+        }
+
         switch (field.type) {
           case 'text':
             // 텍스트 포함 여부

@@ -101,10 +101,8 @@ const OrdersPage = () => {
       label: '결제상태',
       type: 'multiSelect' as const,
       options: [
-        { value: 'Pending', label: '대기중' },
-        { value: 'Paid', label: '결제완료' },
-        { value: 'Failed', label: '결제실패' },
-        { value: 'Refunded', label: '환불' }
+        { value: '결제완료', label: '결제완료' },
+        { value: '미결제', label: '미결제' },
       ]
     },
     {
@@ -112,10 +110,8 @@ const OrdersPage = () => {
       label: '배송상태',
       type: 'multiSelect' as const,
       options: [
-        { value: 'Preparing', label: '준비중' },
-        { value: 'Shipped', label: '배송중' },
-        { value: 'Delivered', label: '배송완료' },
-        { value: 'Cancelled', label: '취소' }
+        { value: '배송완료', label: '배송완료' },
+        { value: '미배송', label: '미배송' }
       ]
     },
     {

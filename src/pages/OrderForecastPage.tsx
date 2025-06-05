@@ -136,7 +136,7 @@ const OrderForecastPage = () => {
         data={forecasts}
         columns={columns}
         searchPlaceholder="고객사, 예측 모델로 검색..."
-        filterFields={filterFields}
+        // filterFields={filterFields}
         exportable={true}
         tableName="customer_order_forecast"
       />

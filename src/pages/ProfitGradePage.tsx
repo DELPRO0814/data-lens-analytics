@@ -139,7 +139,7 @@ const ProfitGradePage = () => {
         data={grades}
         columns={columns}
         searchPlaceholder="고객사, 등급으로 검색..."
-        filterFields={filterFields}
+        // filterFields={filterFields}
         exportable={true}
         tableName="customer_profit_grade"
       />

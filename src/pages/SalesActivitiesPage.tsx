@@ -138,7 +138,7 @@ const SalesActivitiesPage = () => {
         data={activities}
         columns={columns}
         searchPlaceholder="고객사, 활동 유형으로 검색..."
-        filterFields={filterFields}
+        // filterFields={filterFields}
         exportable={true}
         tableName="sales_activities"
       />
