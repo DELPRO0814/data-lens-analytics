@@ -134,7 +134,7 @@ const CustomersPage = () => {
     },
     {
       key: 'company_type',
-      label: '회사 업종',
+      label: '회사 유형',
       type: 'multiSelect' as const,
       options: [
         { value: '완성차', label: '완성차' },
