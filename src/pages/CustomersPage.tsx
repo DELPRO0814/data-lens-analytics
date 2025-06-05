@@ -123,14 +123,27 @@ const CustomersPage = () => {
   // 필터 설정
   const filterFields = [
     {
-      key: 'company_type',
-      label: '회사 유형',
+      key: 'company_size',
+      label: '회사 규모',
       type: 'multiSelect' as const,
-      options: [  /* 옵션 생략 */ ]
+      options: [
+        { value: '대기업', label: '대기업' },
+        { value: '중견기업', label: '중견기업' },
+        { value: '중소기업', label: '중소기업' },
+      ]
     },
-    // ... 다른 필터 설정 생략
+    {
+      key: 'company_type',
+      label: '회사 업종',
+      type: 'multiSelect' as const,
+      options: [
+        { value: '완성차', label: '완성차' },
+        { value: '유통', label: '유통' },
+        { value: '정비소', label: '정비소' },
+        { value: '렌터카', label: '렌터카' },
+      ]
+    },
   ];
-
   // 로딩 상태 표시
   if (loading) {
     return <div className="text-center py-8">로딩중...</div>;

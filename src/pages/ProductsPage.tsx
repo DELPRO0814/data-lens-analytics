@@ -87,24 +87,49 @@ const ProductsPage = () => {
   // 필터 설정
   const filterFields = [
     {
+      key: 'model',
+      label: '모델델',
+      type: 'multiSelect' as const,  // 다중 선택 필터
+      options: [
+        { value: 'Dynapro HPX / Dynapro HT', label: 'Dynapro HPX / Dynapro HT' },
+        { value: 'Enfren', label: 'Enfren' },
+        { value: 'iON', label: 'iON' },
+        { value: 'Kinergy ST / Kinergy AS EV', label: 'Kinergy ST / Kinergy AS EV' },
+        { value: 'Smart Control / Smart Work', label: 'Smart Control / Smart Work' },
+        { value: 'Smart Flex', label: 'Smart Flex' },
+        { value: 'Ventus RS4', label: 'Ventus RS4' },
+        { value: 'iON', label: 'iON' },
+        { value: 'Ventus S1 evo3', label: 'Ventus S1 evo3' },
+        { value: 'Ventus S2 AS', label: 'Ventus S2 AS' },
+        { value: 'Ventus V12 evo2', label: 'Ventus V12 evo2' },
+      ]
+    },
+    {
       key: 'category',
       label: '카테고리',
       type: 'multiSelect' as const,  // 다중 선택 필터
       options: [
-        { value: 'Monitor', label: '모니터' },
-        { value: 'TV', label: 'TV' },
-        { value: 'Laptop', label: '노트북' },
-        { value: 'Desktop', label: '데스크톱' },
-        { value: 'Tablet', label: '태블릿' }
+        { value: 'Sports', label: '스포츠' },
+        { value: 'SUV', label: 'SUV' },
+        { value: '전기차', label: '전기차' },
+        { value: '승용차', label: '승용차' },
+        { value: '레이싱', label: '레이싱' },
+        { value: '트럭', label: '트럭' }
       ]
     },
     {
       key: 'inch',
       label: '크기 (인치)',
-      type: 'slider' as const,  // 슬라이더 필터
-      min: 10,
-      max: 85,
-      step: 1
+      type: 'multiSelect' as const,  // 슬라이더 필터
+      options: [
+        { value: 15, label: "15"},
+        { value: 16, label: "16"},
+        { value: 17, label: "17"},
+        { value: 18, label: "18"},
+        { value: 19, label: "19"},
+        { value: 20, label: "20"},
+        { value: 21, label: "21"},
+      ]
     },
     {
       key: 'originalprice',

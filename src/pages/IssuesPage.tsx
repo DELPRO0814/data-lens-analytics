@@ -84,9 +84,9 @@ const IssuesPage = () => {
           {
             id: '1',
             type: 'warning',
-            title: '심각한 이슈 발견',
-            message: `${data.length}개의 심각한 미해결 이슈가 있습니다. 즉시 처리가 필요합니다.`,
-            actionLabel: '상세 보기',
+            title: '이슈 발견',
+            message: `${data.length}개의 심각한 미해결 이슈가 있습니다.`,
+            // actionLabel: '상세 보기',
             onAction: () => console.log('Critical issues:', data)
           }
         ]);
@@ -127,11 +127,12 @@ const IssuesPage = () => {
       label: '이슈 유형',
       type: 'multiSelect' as const,
       options: [
-        { value: 'Bug', label: '버그' },
-        { value: 'Quality', label: '품질' },
-        { value: 'Delivery', label: '배송' },
-        { value: 'Service', label: '서비스' },
-        { value: 'Technical', label: '기술' }
+        { value: '교환/반품', label: '교환/반품' },
+        { value: '배송 지연', label: '배송 지연' },
+        { value: 'AS 요청', label: 'AS 요청' },
+        { value: '제품 불량', label: '제품 불량' },
+        { value: '결제 문제', label: '결제 문제' },
+        { value: '기타 문제', label: '기타 문제' }
       ]
     },
     {
@@ -142,7 +143,6 @@ const IssuesPage = () => {
         { value: 'Low', label: '낮음' },
         { value: 'Medium', label: '보통' },
         { value: 'High', label: '높음' },
-        { value: 'Critical', label: '긴급' }
       ]
     },
     {
@@ -150,10 +150,9 @@ const IssuesPage = () => {
       label: '상태',
       type: 'multiSelect' as const,
       options: [
-        { value: '접수', label: '접수' },
+        { value: '미해결', label: '미해결' },
         { value: '처리중', label: '처리중' },
         { value: '해결됨', label: '해결됨' },
-        { value: '종료', label: '종료' }
       ]
     },
     {
@@ -161,11 +160,11 @@ const IssuesPage = () => {
       label: '발생일',
       type: 'dateRange' as const
     },
-    {
-      key: 'resolved_date',
-      label: '해결일',
-      type: 'dateRange' as const
-    }
+    // {
+    //   key: 'resolved_date',
+    //   label: '해결일',
+    //   type: 'dateRange' as const
+    // }
   ];
 
   // 로딩 상태 표시

@@ -132,10 +132,10 @@ const ClaimsPage = () => {
       label: '예측 클레임 유형',
       type: 'multiSelect' as const,
       options: [
-        { value: 'Quality', label: '품질' },
-        { value: 'Delivery', label: '배송' },
-        { value: 'Service', label: '서비스' },
-        { value: 'Warranty', label: '보증' }
+        { value: '제품 불량', label: '품질' },
+        { value: '배송 지연', label: '배송' },
+        { value: '기타 문제', label: '기타' },
+        { value: ['없음', '알 수 없음'], label: '없음/알 수 없음' },
       ]
     },
     // 예측일 범위 선택 필터
@@ -170,7 +170,7 @@ const ClaimsPage = () => {
         data={claims}
         columns={columns}
         searchPlaceholder="클레임번호, 고객사로 검색..."
-        filterFields={filterFields}
+        filterFields={filterFields} // 빨간줄이 생겼지만 작동에 문제는 없음
         exportable={true}
         tableName="claims"
       />

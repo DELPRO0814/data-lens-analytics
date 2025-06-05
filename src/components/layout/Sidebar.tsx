@@ -63,7 +63,7 @@ const coreMenuItems = [
   { path: '/orders', label: '주문', icon: ShoppingCart },
   { path: '/issues', label: '이슈', icon: AlertTriangle },
   { path: '/claims', label: '클레임', icon: Shield },
-  { path: '/sales-forecast', label: '영업 접촉 예측', icon: Calendar },
+  // { path: '/sales-forecast', label: '영업 접촉 예측', icon: Calendar },
   { path: '/profit-grade', label: '고객 수익 등급', icon: DollarSign },
   { path: '/order-forecast', label: '고객 주문 예측', icon: TrendingUp },
   { path: '/priority-dashboard', label: '우선순위 대시보드', icon: Star },

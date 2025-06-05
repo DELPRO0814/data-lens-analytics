@@ -133,7 +133,7 @@ const EngagementsPage = () => {
         data={engagements}
         columns={columns}
         searchPlaceholder="고객사, 활동으로 검색..."
-        filterFields={filterFields}
+        // filterFields={filterFields}
         exportable={true}
         tableName="engagements"
       />
