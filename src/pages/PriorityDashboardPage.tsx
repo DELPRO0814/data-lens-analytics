@@ -1,3 +1,19 @@
+/**
+ * PriorityDashboardPage 컴포넌트
+ * -----------------------------------------------------
+ * 주요 동작 요약:
+ * - 고위험 고객(세그먼트/클레임), 미해결 이슈 등 즉시 관리가 필요한 고객과 이슈를 통합적으로 대시보드로 제공합니다.
+ * - Supabase에서 여러 테이블(segments, claims, sales_activities, issues)을 병렬로 조회해 데이터를 결합합니다.
+ * - 주요 지표 카드(고위험 세그먼트, 클레임 위험, 평균 CLV, 긴급 이슈), 위험 유형별 파이차트, 상위 고객 CLV 바차트, 상세 테이블을 제공합니다.
+ * - 데이터 결합, 통계 산출, 차트 데이터 가공 등 실무 대시보드에 필요한 모든 로직이 포함되어 있습니다.
+ *
+ * 상세 설명:
+ * - fetchPriorityData에서 4개 테이블을 병렬로 조회, 회사명 기준으로 데이터를 결합해 고위험 고객 목록을 만듭니다.
+ * - 세그먼트/클레임/이슈 각각의 위험 건수, 평균 CLV, 미해결 이슈 수 등 주요 통계를 산출합니다.
+ * - PieChart, BarChart로 위험 유형별 분포와 상위 고객 CLV를 시각화합니다.
+ * - 상세 테이블에서 고객사, 담당자, CLV, 위험도, 클레임 확률, 최근 활동일을 한눈에 확인할 수 있습니다.
+ * - 로딩/에러 상태를 처리하며, 실무에서 바로 활용 가능한 구조입니다.
+ */
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { AlertTriangle, TrendingUp, DollarSign, Calendar } from 'lucide-react';
 
+// 고위험 고객 데이터 타입 정의
 interface CombinedCustomerData {
   company: string;
   contact: string;
@@ -17,67 +34,67 @@ interface CombinedCustomerData {
 }
 
 const PriorityDashboardPage = () => {
+  // 고위험 고객 목록
   const [highRiskCustomers, setHighRiskCustomers] = useState<CombinedCustomerData[]>([]);
+  // 주요 통계 상태
   const [stats, setStats] = useState({
     totalHighRisk: 0,
     totalClaimRisk: 0,
     avgCLV: 0,
     urgentIssues: 0
   });
+  // 차트 데이터 상태
   const [chartData, setChartData] = useState([]);
+  // 로딩 상태
   const [loading, setLoading] = useState(true);
+  // 토스트 알림 훅
   const { toast } = useToast();
 
+  // 페이지 마운트 시 데이터 조회
   useEffect(() => {
     fetchPriorityData();
   }, []);
 
+  /**
+   * 우선순위 대시보드 데이터 종합 조회 및 가공
+   * - 고위험 세그먼트, 고위험 클레임, 최근 영업활동, 미해결 이슈 데이터 병렬 조회
+   * - 회사명 기준으로 데이터를 결합, 통계/차트/테이블용 데이터 가공
+   */
   const fetchPriorityData = async () => {
     try {
-      // 고위험 세그먼트 고객 조회
+      // 1. 고위험 세그먼트 고객 조회
       const { data: segmentData, error: segmentError } = await supabase
         .from('segments')
-        .select(`
-          *,
-          contacts(name, customers(company_name, customer_id))
-        `)
+        .select(`*, contacts(name, customers(company_name, customer_id))`)
         .eq('predicted_risk_level', 'High')
         .order('clv', { ascending: false });
-
       if (segmentError) throw segmentError;
 
-      // 고위험 클레임 예측 고객 조회
+      // 2. 고위험 클레임 예측 고객 조회
       const { data: claimData, error: claimError } = await supabase
         .from('claims')
-        .select(`
-          *,
-          contacts(name, customers(company_name, customer_id))
-        `)
+        .select(`*, contacts(name, customers(company_name, customer_id))`)
         .eq('predicted_claim_level', 'High')
         .gte('predicted_claim_probability', 0.7);
-
       if (claimError) throw claimError;
 
-      // 최근 영업 활동 조회
+      // 3. 최근 영업 활동 조회
       const { data: activityData, error: activityError } = await supabase
         .from('sales_activities')
         .select('*')
         .order('activity_date', { ascending: false });
-
       if (activityError) throw activityError;
 
-      // 미해결 이슈 조회
+      // 4. 미해결 이슈 조회
       const { data: issueData, error: issueError } = await supabase
         .from('issues')
         .select('*')
         .eq('severity', 'High')
         .neq('status', '해결됨');
-
       if (issueError) throw issueError;
 
-      // 데이터 결합 및 처리
+      // 5. 데이터 결합(회사명 기준) 및 고위험 고객 목록 생성
       const combinedData: Record<string, CombinedCustomerData> = {};
-      
       // 세그먼트 데이터 처리
       segmentData?.forEach(segment => {
         const key = segment.contacts?.customers?.company_name;
@@ -92,8 +109,7 @@ const PriorityDashboardPage = () => {
           };
         }
       });
-
-      // 클레임 데이터 처리
+      // 클레임 데이터 처리 및 결합
       claimData?.forEach(claim => {
         const key = claim.contacts?.customers?.company_name;
         if (key) {
@@ -114,16 +130,15 @@ const PriorityDashboardPage = () => {
           }
         }
       });
-
+      // 최종 고위험 고객 목록
       const priorityCustomers = Object.values(combinedData);
       setHighRiskCustomers(priorityCustomers);
 
-      // 통계 계산
+      // 6. 주요 통계 계산
       const segmentCount = segmentData?.length || 0;
       const claimCount = claimData?.length || 0;
       const totalCLV = segmentData?.reduce((sum, item) => sum + (item.clv || 0), 0) || 0;
       const avgCLV = segmentCount > 0 ? totalCLV / segmentCount : 0;
-
       setStats({
         totalHighRisk: segmentCount,
         totalClaimRisk: claimCount,
@@ -131,7 +146,7 @@ const PriorityDashboardPage = () => {
         urgentIssues: issueData?.length || 0
       });
 
-      // 차트 데이터 준비
+      // 7. 위험 유형별 차트 데이터 준비
       const riskLevelChart = [
         { name: '세그먼트 위험', value: segmentCount, color: '#ff6b6b' },
         { name: '클레임 위험', value: claimCount, color: '#feca57' },
@@ -151,12 +166,14 @@ const PriorityDashboardPage = () => {
     }
   };
 
+  // 로딩 상태 표시
   if (loading) {
     return <div className="text-center py-8">로딩중...</div>;
   }
 
   return (
     <div className="space-y-6">
+      {/* 페이지 헤더 */}
       <PageHeader 
         title="우선순위 대시보드" 
         description="고위험 고객 및 즉시 대응이 필요한 이슈를 관리합니다."
@@ -174,7 +191,6 @@ const PriorityDashboardPage = () => {
             <p className="text-xs text-muted-foreground">즉시 관리 필요</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">클레임 위험</CardTitle>
@@ -185,7 +201,6 @@ const PriorityDashboardPage = () => {
             <p className="text-xs text-muted-foreground">사전 대응 필요</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">평균 CLV</CardTitle>
@@ -198,7 +213,6 @@ const PriorityDashboardPage = () => {
             <p className="text-xs text-muted-foreground">고위험 고객 평균</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">긴급 이슈</CardTitle>
@@ -238,7 +252,6 @@ const PriorityDashboardPage = () => {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader>
             <CardTitle>고위험 고객 CLV 분석</CardTitle>

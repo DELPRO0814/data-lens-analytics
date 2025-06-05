@@ -1,3 +1,20 @@
+/**
+ * OpportunityAnalysisPage 컴포넌트
+ * -----------------------------------------------------
+ * 주요 동작 요약:
+ * - 영업 접촉 예측, 주문 예측, 수익 등 여러 AI 기반 데이터를 결합해 영업 기회(오퍼튜니티)를 분석합니다.
+ * - Supabase에서 sales_contact_forecast, customer_order_forecast, customer_profit_grade 테이블을 조회해 데이터를 통합합니다.
+ * - 주요 지표(총 기회 수, 예상 매출, 평균 정확도, 이번주 예정 기회) 카드, 월별 매출/기회 추이 차트, 상위 10개 기회 바차트, 상세 테이블을 제공합니다.
+ * - 데이터 로딩, 에러 처리, 통계 계산, 차트 데이터 가공 등 실무 대시보드에 필요한 모든 로직이 포함되어 있습니다.
+ *
+ * 상세 설명:
+ * - fetchOpportunityData에서 3개 테이블을 병렬로 조회하고, 회사명 기준으로 데이터를 매칭/결합합니다.
+ * - 정확도(MAPE 역수), 예상 매출, 우선순위(정확도 기반) 등 다양한 지표를 산출합니다.
+ * - 월별 매출/기회 데이터는 YYYY-MM별로 집계하며, 차트와 표에 모두 활용합니다.
+ * - 상위 10개 기회는 예상 매출 기준으로 정렬해 바차트와 상세 테이블에 표시합니다.
+ * - 로딩 상태/에러 발생 시 사용자에게 안내 메시지를 제공합니다.
+ * - Tailwind CSS와 recharts, lucide-react 아이콘을 활용해 일관된 UI와 시각화를 구현합니다.
+ */
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +25,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { TrendingUp, Calendar, Target, DollarSign } from 'lucide-react';
 
 const OpportunityAnalysisPage = () => {
+  // 상태: 기회 목록, 월별 예측, 주요 통계, 로딩
   const [opportunities, setOpportunities] = useState([]);
   const [monthlyForecast, setMonthlyForecast] = useState([]);
   const [stats, setStats] = useState({
@@ -19,56 +37,46 @@ const OpportunityAnalysisPage = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // 마운트 시 데이터 조회
   useEffect(() => {
     fetchOpportunityData();
   }, []);
 
+  /**
+   * 영업 기회 데이터 종합 조회 및 가공
+   * - 접촉 예측/주문 예측/수익 등 3개 테이블 병렬 조회
+   * - 회사명 기준으로 데이터 매칭 및 결합
+   * - 정확도, 매출, 우선순위, 월별 집계 등 각종 지표 산출
+   */
   const fetchOpportunityData = async () => {
     try {
-      // 영업 접촉 예측 데이터 조회
+      // 1. 영업 접촉 예측 데이터 조회
       const { data: contactForecast, error: contactError } = await supabase
         .from('sales_contact_forecast')
-        .select(`
-          *,
-          customers(company_name)
-        `)
+        .select(`*, customers(company_name)`)
         .order('scf_recommended_date', { ascending: true });
-
       if (contactError) throw contactError;
 
-      // 고객 주문 예측 데이터 조회
+      // 2. 고객 주문 예측 데이터 조회
       const { data: orderForecast, error: orderError } = await supabase
         .from('customer_order_forecast')
-        .select(`
-          *,
-          customers(company_name)
-        `)
+        .select(`*, customers(company_name)`)
         .order('predicted_date', { ascending: true });
-
       if (orderError) throw orderError;
 
-      // 고객 수익 데이터 조회
+      // 3. 고객 수익 데이터 조회
       const { data: profitData, error: profitError } = await supabase
         .from('customer_profit_grade')
-        .select(`
-          *,
-          contacts(customers(company_name))
-        `)
+        .select(`*, contacts(customers(company_name))`)
         .order('total_sales', { ascending: false });
-
       if (profitError) throw profitError;
 
-      // 데이터 결합 및 처리
+      // 4. 데이터 결합 및 통합 기회 목록 생성
       const combinedOpportunities = [];
-      
-      // 접촉 예측과 주문 예측 결합
+      // 접촉 예측 데이터 기반 기회 생성
       contactForecast?.forEach(contact => {
-        const relatedOrder = orderForecast?.find(order => 
-          order.customer_id === contact.customer_id
-        );
-        const relatedProfit = profitData?.find(profit => 
-          profit.contacts?.customers?.company_name === contact.customers?.company_name
-        );
+        const relatedOrder = orderForecast?.find(order => order.customer_id === contact.customer_id);
+        const relatedProfit = profitData?.find(profit => profit.contacts?.customers?.company_name === contact.customers?.company_name);
 
         const contactMape = typeof contact.scf_mape === 'number' ? contact.scf_mape : 0;
         const profitSales = typeof relatedProfit?.total_sales === 'number' ? relatedProfit.total_sales : 0;
@@ -86,11 +94,9 @@ const OpportunityAnalysisPage = () => {
           priority: contactMape < 0.1 ? 'High' : contactMape < 0.3 ? 'Medium' : 'Low'
         });
       });
-
+      // 주문 예측 데이터 기반 기회 생성
       orderForecast?.forEach(order => {
-        const relatedProfit = profitData?.find(profit => 
-          profit.contacts?.customers?.company_name === order.customers?.company_name
-        );
+        const relatedProfit = profitData?.find(profit => profit.contacts?.customers?.company_name === order.customers?.company_name);
 
         const orderMape = typeof order.mape === 'number' ? Number(order.mape) : 0;
         const profitSales = typeof relatedProfit?.total_sales === 'number' ? relatedProfit.total_sales : 0;
@@ -109,7 +115,7 @@ const OpportunityAnalysisPage = () => {
         });
       });
 
-      // 상위 기회 정렬
+      // 5. 상위 10개 기회(예상 매출 기준) 추출
       const topOpportunities = combinedOpportunities
         .sort((a, b) => {
           const aRevenue = typeof a.expectedRevenue === 'number' ? a.expectedRevenue : 0;
@@ -117,10 +123,9 @@ const OpportunityAnalysisPage = () => {
           return bRevenue - aRevenue;
         })
         .slice(0, 10);
-
       setOpportunities(topOpportunities);
 
-      // 월별 예측 데이터 생성
+      // 6. 월별 예측 데이터 집계
       const monthlyData = {};
       combinedOpportunities.forEach(opp => {
         const month = new Date(opp.date).toISOString().slice(0, 7);
@@ -132,30 +137,25 @@ const OpportunityAnalysisPage = () => {
         if (opp.type === 'contact') monthlyData[month].contacts++;
         if (opp.type === 'order') monthlyData[month].orders++;
       });
-
       setMonthlyForecast(Object.values(monthlyData).slice(0, 12));
 
-      // 통계 계산
+      // 7. 주요 통계 계산(총 기회, 매출, 정확도, 7일 내 예정)
       const today = new Date();
       const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-      
       const upcomingCount = combinedOpportunities.filter(opp => {
         const oppDate = new Date(opp.date);
         return oppDate >= today && oppDate <= nextWeek;
       }).length;
-
       const totalRevenue = combinedOpportunities.reduce((sum, opp) => {
         const oppRevenue = typeof opp.expectedRevenue === 'number' ? opp.expectedRevenue : 0;
         return sum + oppRevenue;
       }, 0);
-      
       const avgAccuracy = combinedOpportunities.length > 0 
         ? combinedOpportunities.reduce((sum, opp) => {
             const oppAccuracy = typeof opp.accuracy === 'number' ? opp.accuracy : 0;
             return sum + oppAccuracy;
           }, 0) / combinedOpportunities.length * 100
         : 0;
-
       setStats({
         totalOpportunities: combinedOpportunities.length,
         expectedRevenue: totalRevenue,
@@ -175,12 +175,14 @@ const OpportunityAnalysisPage = () => {
     }
   };
 
+  // 로딩 상태 처리
   if (loading) {
     return <div className="text-center py-8">로딩중...</div>;
   }
 
   return (
     <div className="space-y-6">
+      {/* 페이지 헤더 */}
       <PageHeader 
         title="영업 기회 분석" 
         description="AI 예측 기반 영업 기회를 분석하고 우선순위를 제시합니다."
@@ -198,7 +200,6 @@ const OpportunityAnalysisPage = () => {
             <p className="text-xs text-muted-foreground">예측된 기회</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">예상 매출</CardTitle>
@@ -211,7 +212,6 @@ const OpportunityAnalysisPage = () => {
             <p className="text-xs text-muted-foreground">총 예상 매출</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">평균 정확도</CardTitle>
@@ -224,7 +224,6 @@ const OpportunityAnalysisPage = () => {
             <p className="text-xs text-muted-foreground">예측 정확도</p>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">이번주 기회</CardTitle>
@@ -263,7 +262,6 @@ const OpportunityAnalysisPage = () => {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader>
             <CardTitle>상위 10 영업 기회</CardTitle>
@@ -289,7 +287,7 @@ const OpportunityAnalysisPage = () => {
         </Card>
       </div>
 
-      {/* 상위 영업 기회 테이블 */}
+      {/* 상위 영업 기회 상세 테이블 */}
       <Card>
         <CardHeader>
           <CardTitle>상위 영업 기회 상세</CardTitle>

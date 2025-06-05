@@ -1,10 +1,31 @@
+/**
+ * Dashboard 컴포넌트
+ * -----------------------------------------------------
+ * 주요 동작 요약:
+ * - Supabase에서 여러 테이블의 데이터를 병렬로 불러와 대시보드에 필요한 다양한 지표와 차트 데이터를 계산합니다.
+ * - 핵심 숫자 지표(고객/연락처/제품/주문 등)는 MetricCard로, 분포 데이터는 ChartCard로 시각화합니다.
+ * - 에러/로딩 처리, 데이터 가공 및 집계, 차트용 데이터 변환 등 대시보드 페이지에서 필요한 모든 로직이 포함되어 있습니다.
+ *
+ * 상세 설명:
+ * - useEffect에서 fetchDashboardData를 호출해 customers, contacts, products, predictions, orders, issues 등 주요 테이블의 데이터를 병렬로 불러옵니다.
+ * - 각종 합계, 평균, 분포(파이/막대 차트용) 데이터를 계산하여 DashboardData 형태로 상태에 저장합니다.
+ * - MetricCard는 주요 숫자 지표(예: 총 고객 수, 총 연락처 수 등)를 카드로 표시합니다.
+ * - ChartCard는 파이/막대 차트로 고객 유형, 위험도, 결제 상태, 이슈 상태 분포를 시각화합니다.
+ * - 데이터 로딩 중에는 스피너, 에러 시 안내 메시지를 표시합니다.
+ * - Tailwind CSS 기반의 반응형 UI와 일관된 디자인, 상세한 주석이 포함되어 있습니다.
+ */
 
 import React, { useEffect, useState } from 'react';
+// 페이지 이동을 위한 라우터 훅
 import { useNavigate } from 'react-router-dom';
+// Supabase: DB에서 데이터 조회
 import { supabase } from '@/integrations/supabase/client';
+// toast: 사용자에게 알림 메시지 표시
 import { useToast } from '@/hooks/use-toast';
+// 대시보드에 표시할 카드/차트 컴포넌트
 import MetricCard from './MetricCard';
 import ChartCard from './ChartCard';
+// lucide-react: 카드에 사용할 아이콘들
 import { 
   Users, 
   Phone, 
@@ -16,38 +37,46 @@ import {
   AlertTriangle 
 } from 'lucide-react';
 
+// 대시보드 데이터 구조 타입 정의
 interface DashboardData {
-  totalCustomers: number;
-  totalContacts: number;
-  keyContacts: number;
-  totalProducts: number;
-  avgPrice: number;
-  totalPredictions: number;
-  avgPredictedQuantity: number;
-  totalOrders: number;
-  avgOrderAmount: number;
-  totalIssues: number;
-  customerTypeData: any[];
-  riskLevelData: any[];
-  paymentStatusData: any[];
-  issueStatusData: any[];
+  totalCustomers: number;           // 총 고객 수
+  totalContacts: number;            // 총 연락처 수
+  keyContacts: number;              // 주요 연락처(키맨) 수
+  totalProducts: number;            // 총 제품 수
+  avgPrice: number;                 // 평균 제품 가격
+  totalPredictions: number;         // 예측 데이터 수
+  avgPredictedQuantity: number;     // 평균 예측 수량
+  totalOrders: number;              // 총 주문 수
+  avgOrderAmount: number;           // 평균 주문 금액
+  totalIssues: number;              // 이슈(문제) 총 개수
+  customerTypeData: any[];          // 고객 유형별 분포(파이차트)
+  riskLevelData: any[];             // 위험도별 세그먼트 분포(파이차트)
+  paymentStatusData: any[];         // 결제 상태별 주문 분포(막대차트)
+  issueStatusData: any[];           // 이슈 상태별 분포(막대차트)
 }
 
+// 대시보드 컴포넌트
 const Dashboard: React.FC = () => {
+  // 대시보드 데이터 상태
   const [data, setData] = useState<DashboardData | null>(null);
+  // 로딩 상태(데이터 불러오는 중)
   const [loading, setLoading] = useState(true);
+  // toast 메시지 훅
   const { toast } = useToast();
+  // 페이지 이동 훅
   const navigate = useNavigate();
 
+  // 컴포넌트가 처음 마운트될 때 데이터 불러오기
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
+  // 대시보드 데이터 불러오는 함수
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
 
-      // 병렬로 모든 데이터 가져오기
+      // 여러 테이블에서 데이터를 병렬로 불러옴
       const [
         customersResult,
         contactsResult,
@@ -64,6 +93,7 @@ const Dashboard: React.FC = () => {
         supabase.from('issues').select('*')
       ]);
 
+      // 에러 발생 시 예외 처리
       if (customersResult.error) throw customersResult.error;
       if (contactsResult.error) throw contactsResult.error;
       if (productsResult.error) throw productsResult.error;
@@ -71,6 +101,7 @@ const Dashboard: React.FC = () => {
       if (ordersResult.error) throw ordersResult.error;
       if (issuesResult.error) throw issuesResult.error;
 
+      // 각 테이블 데이터 추출(없으면 빈 배열)
       const customers = customersResult.data || [];
       const contacts = contactsResult.data || [];
       const products = productsResult.data || [];
@@ -78,22 +109,26 @@ const Dashboard: React.FC = () => {
       const orders = ordersResult.data || [];
       const issues = issuesResult.data || [];
 
-      // 기본 메트릭 계산
+      // 핵심 메트릭 계산
       const totalCustomers = customers.length;
       const totalContacts = contacts.length;
+      // is_keyman이 '1'인 연락처(중요 담당자) 수
       const keyContacts = contacts.filter(c => c.is_keyman === '1').length;
       const totalProducts = products.length;
+      // 평균 제품 가격
       const avgPrice = products.length > 0 ? 
         products.reduce((sum, p) => sum + (p.sellingprice || 0), 0) / products.length : 0;
       const totalPredictions = predictions.length;
+      // 평균 예측 수량
       const avgPredictedQuantity = predictions.length > 0 ?
         predictions.reduce((sum, p) => sum + (p.predicted_quantity || 0), 0) / predictions.length : 0;
       const totalOrders = orders.length;
+      // 평균 주문 금액
       const avgOrderAmount = orders.length > 0 ?
         orders.reduce((sum, o) => sum + (o.amount || 0), 0) / orders.length : 0;
       const totalIssues = issues.length;
 
-      // 차트 데이터 준비
+      // 고객 유형별 분포(파이차트용 데이터)
       const customerTypeData = customers.reduce((acc, customer) => {
         const type = customer.company_type || '기타';
         const existing = acc.find(item => item.name === type);
@@ -105,10 +140,9 @@ const Dashboard: React.FC = () => {
         return acc;
       }, [] as any[]);
 
-      // segments 테이블에서 위험도 데이터 가져오기
+      // segments 테이블에서 위험도별 세그먼트 분포 데이터 가져오기
       const segmentsResult = await supabase.from('segments').select('*');
       const segments = segmentsResult.data || [];
-      
       const riskLevelData = segments.reduce((acc, segment) => {
         const risk = segment.predicted_risk_level || '알 수 없음';
         const existing = acc.find(item => item.name === risk);
@@ -120,6 +154,7 @@ const Dashboard: React.FC = () => {
         return acc;
       }, [] as any[]);
 
+      // 결제 상태별 주문 분포(막대차트용 데이터)
       const paymentStatusData = orders.reduce((acc, order) => {
         const status = order.payment_status || '알 수 없음';
         const existing = acc.find(item => item.name === status);
@@ -131,6 +166,7 @@ const Dashboard: React.FC = () => {
         return acc;
       }, [] as any[]);
 
+      // 이슈 상태별 분포(막대차트용 데이터)
       const issueStatusData = issues.reduce((acc, issue) => {
         const status = issue.status || '알 수 없음';
         const existing = acc.find(item => item.name === status);
@@ -142,6 +178,7 @@ const Dashboard: React.FC = () => {
         return acc;
       }, [] as any[]);
 
+      // 모든 대시보드 데이터 상태에 저장
       setData({
         totalCustomers,
         totalContacts,
@@ -160,6 +197,7 @@ const Dashboard: React.FC = () => {
       });
 
     } catch (error) {
+      // 에러 발생 시 콘솔 출력 및 toast로 안내
       console.error('Dashboard data fetch error:', error);
       toast({
         title: "오류",
@@ -167,10 +205,11 @@ const Dashboard: React.FC = () => {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setLoading(false); // 로딩 종료
     }
   };
 
+  // 데이터 로딩 중이면 로딩 스피너 표시
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
@@ -179,6 +218,7 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  // 데이터가 없으면 안내 메시지 표시
   if (!data) {
     return (
       <div className="text-center py-12">
@@ -187,14 +227,16 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  // 대시보드 메인 렌더링
   return (
     <div className="space-y-6">
+      {/* 상단: 대시보드 타이틀/설명 */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">대시보드 개요</h1>
         <p className="text-gray-600">CRM 시스템의 주요 지표를 한눈에 확인하세요</p>
       </div>
 
-      {/* 메트릭 카드 */}
+      {/* 메트릭 카드: 주요 숫자 지표를 카드로 보여줌 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
           title="총 고객 수"
@@ -254,7 +296,7 @@ const Dashboard: React.FC = () => {
         />
       </div>
 
-      {/* 차트 */}
+      {/* 차트 카드: 파이/막대 차트로 주요 분포 시각화 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartCard
           title="고객 유형별 분포"
