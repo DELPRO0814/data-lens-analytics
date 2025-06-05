@@ -67,7 +67,7 @@ const coreMenuItems = [
   { path: '/profit-grade', label: '고객 수익 등급', icon: DollarSign },
   { path: '/order-forecast', label: '고객 주문 예측', icon: TrendingUp },
   { path: '/priority-dashboard', label: '우선순위 대시보드', icon: Star },
-  { path: '/opportunity-analysis', label: '영업 기회 분석', icon: TrendingDown }
+  // { path: '/opportunity-analysis', label: '영업 기회 분석', icon: TrendingDown }
 ];
 
 // 선택적 메뉴 항목(optionalMenuItems): 필요 시 주석 해제하여 추가 가능
