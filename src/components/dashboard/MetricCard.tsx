@@ -1,21 +1,3 @@
-/**
- * MetricCard 컴포넌트
- * -----------------------------------------------------
- * 주요 동작 요약:
- * - 대시보드 등에서 주요 숫자 지표(메트릭)를 카드 형태로 표시합니다.
- * - 카드에는 제목, 값, (선택) 트렌드(증감률), 아이콘이 포함됩니다.
- * - 색상 테마(color)에 따라 카드 우측 아이콘 배경/테두리/글씨색이 달라집니다.
- * - onClick이 있으면 카드 전체가 클릭 가능하며, 호버 시 그림자 효과가 생깁니다.
- * - 트렌드가 있으면 값 아래에 +3.5% 또는 -2.1% 등으로 표시되며, 색상도 상승/하락에 따라 달라집니다.
- *
- * 상세 설명:
- * - title(문자열)은 카드 상단에 작은 글씨로 표시됩니다.
- * - value(숫자/문자열)는 크고 굵은 글씨로 강조됩니다.
- * - icon(아이콘 컴포넌트)는 카드 우측에 컬러 테마에 맞게 표시됩니다.
- * - trend가 있으면 증감률(%)이 값 아래에 표시되고, 상승이면 초록, 하락이면 빨간색으로 표시됩니다.
- * - onClick이 있으면 카드 전체가 클릭 가능하며, 호버 시 그림자 효과가 강화됩니다.
- * - Tailwind CSS로 일관된 디자인과 반응형 UI를 제공합니다.
- */
 
 import React from 'react';
 // lucide-react에서 아이콘 타입 불러오기
@@ -34,13 +16,38 @@ interface MetricCardProps {
   onClick?: () => void; // (선택) 카드 클릭 시 실행할 함수
 }
 
-// 색상별 Tailwind CSS 클래스 매핑
+// 색상별 그라데이션 및 스타일 매핑
 const colorClasses = {
-  blue: 'bg-blue-50 text-blue-600 border-blue-200',
-  green: 'bg-green-50 text-green-600 border-green-200',
-  purple: 'bg-purple-50 text-purple-600 border-purple-200',
-  orange: 'bg-orange-50 text-orange-600 border-orange-200',
-  red: 'bg-red-50 text-red-600 border-red-200',
+  blue: {
+    gradient: 'from-blue-500 to-cyan-500',
+    iconBg: 'bg-gradient-to-r from-blue-100 to-cyan-100',
+    iconText: 'text-blue-600',
+    shadow: 'shadow-blue-200/50'
+  },
+  green: {
+    gradient: 'from-green-500 to-emerald-500',
+    iconBg: 'bg-gradient-to-r from-green-100 to-emerald-100',
+    iconText: 'text-green-600',
+    shadow: 'shadow-green-200/50'
+  },
+  purple: {
+    gradient: 'from-purple-500 to-violet-500',
+    iconBg: 'bg-gradient-to-r from-purple-100 to-violet-100',
+    iconText: 'text-purple-600',
+    shadow: 'shadow-purple-200/50'
+  },
+  orange: {
+    gradient: 'from-orange-500 to-amber-500',
+    iconBg: 'bg-gradient-to-r from-orange-100 to-amber-100',
+    iconText: 'text-orange-600',
+    shadow: 'shadow-orange-200/50'
+  },
+  red: {
+    gradient: 'from-red-500 to-pink-500',
+    iconBg: 'bg-gradient-to-r from-red-100 to-pink-100',
+    iconText: 'text-red-600',
+    shadow: 'shadow-red-200/50'
+  },
 };
 
 // MetricCard 컴포넌트 정의
@@ -52,35 +59,59 @@ const MetricCard: React.FC<MetricCardProps> = ({
   trend,
   onClick 
 }) => {
+  const colorConfig = colorClasses[color];
+
   return (
-    // 카드 전체 컨테이너: 흰색 배경, 둥근 모서리, 그림자, 테두리
-    // onClick이 있으면 커서 포인터 및 호버 시 그림자 효과
+    // 카드 전체 컨테이너: 글래스모피즘 효과, 그라데이션 테두리, 애니메이션
     <div 
-      className={`bg-white rounded-lg p-6 shadow-sm border border-gray-200 ${
-        onClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''
-      }`}
+      className={`
+        glass-card animated-card rounded-2xl p-6 relative overflow-hidden group
+        ${onClick ? 'cursor-pointer hover:shadow-2xl' : ''} 
+        ${colorConfig.shadow}
+      `}
       onClick={onClick}
     >
+      {/* 배경 그라데이션 효과 */}
+      <div className={`absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-r ${colorConfig.gradient} rounded-full opacity-10 group-hover:opacity-20 transition-opacity duration-300`}></div>
+      
       {/* 카드 내부: 좌측(텍스트), 우측(아이콘)로 배치 */}
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between relative z-10">
+        <div className="flex-1">
           {/* 제목: 작은 글씨, 회색, 아래 여백 */}
-          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
+          <p className="text-sm font-medium text-gray-600 mb-2 uppercase tracking-wide">{title}</p>
           {/* 값: 크고 굵은 글씨, 진한 회색 */}
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <p className="text-3xl font-bold text-gray-900 mb-1">{value}</p>
           {/* 트렌드(증감률)가 있으면 아래에 % 표시, 색상은 상승/하락에 따라 다름 */}
           {trend && (
-            <p className={`text-xs ${trend.isPositive ? 'text-green-600' : 'text-red-600'} mt-1`}>
+            <div className={`
+              inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+              ${trend.isPositive 
+                ? 'bg-green-100 text-green-700' 
+                : 'bg-red-100 text-red-700'
+              }
+            `}>
+              <span className="mr-1">
+                {trend.isPositive ? '↗' : '↘'}
+              </span>
               {trend.isPositive ? '+' : ''}{trend.value}%
-            </p>
+            </div>
           )}
         </div>
-        {/* 아이콘 영역: 배경색, 텍스트색, 테두리색은 colorClasses에서 가져옴, 둥근 모서리, 패딩 */}
-        <div className={`p-3 rounded-lg border ${colorClasses[color]}`}>
-          {/* 아이콘 컴포넌트: 크기 24px */}
-          <Icon className="w-6 h-6" />
+        {/* 아이콘 영역: 그라데이션 배경, 둥근 모서리, 애니메이션 */}
+        <div className={`
+          p-4 rounded-2xl ${colorConfig.iconBg} 
+          group-hover:scale-110 transition-all duration-300
+          shadow-lg relative overflow-hidden
+        `}>
+          {/* 아이콘 배경 shimmer 효과 */}
+          <div className="absolute inset-0 shimmer rounded-2xl opacity-0 group-hover:opacity-100"></div>
+          {/* 아이콘 컴포넌트: 크기 28px */}
+          <Icon className={`w-7 h-7 ${colorConfig.iconText} relative z-10`} />
         </div>
       </div>
+
+      {/* 하단 장식선 */}
+      <div className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r ${colorConfig.gradient} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left`}></div>
     </div>
   );
 };

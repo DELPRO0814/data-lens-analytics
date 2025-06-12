@@ -230,8 +230,12 @@ const Dashboard: React.FC = () => {
   // 데이터 로딩 중이면 로딩 스피너 표시
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-96">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent absolute top-0 left-0"></div>
+          <div className="mt-4 text-center text-gray-600 font-medium">데이터 로딩중...</div>
+        </div>
       </div>
     );
   }
@@ -240,18 +244,32 @@ const Dashboard: React.FC = () => {
   if (!data) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">데이터를 불러올 수 없습니다.</p>
+        <div className="glass-card rounded-2xl p-8 max-w-md mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-white text-2xl">!</span>
+          </div>
+          <p className="text-gray-700 font-medium">데이터를 불러올 수 없습니다.</p>
+          <p className="text-gray-500 text-sm mt-2">잠시 후 다시 시도해주세요.</p>
+        </div>
       </div>
     );
   }
 
   // 대시보드 메인 렌더링
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 p-6">
       {/* 상단: 대시보드 타이틀/설명 */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">대시보드 개요</h1>
-        <p className="text-gray-600">CRM 시스템의 주요 지표를 한눈에 확인하세요</p>
+      <div className="text-center relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-3xl -rotate-1"></div>
+        <div className="relative glass-card rounded-3xl p-8">
+          <h1 className="text-4xl font-bold gradient-text mb-4">대시보드 개요</h1>
+          <p className="text-gray-600 text-lg">CRM 시스템의 주요 지표를 한눈에 확인하세요</p>
+          <div className="mt-4 flex justify-center space-x-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+          </div>
+        </div>
       </div>
 
       {/* 메트릭 카드: 주요 숫자 지표를 카드로 보여줌 */}
@@ -314,8 +332,14 @@ const Dashboard: React.FC = () => {
         />
       </div>
 
+      {/* 차트 섹션 제목 */}
+      <div className="text-center mt-12 mb-8">
+        <h2 className="text-2xl font-bold gradient-text mb-2">데이터 분석</h2>
+        <p className="text-gray-600">다양한 관점에서 살펴보는 비즈니스 인사이트</p>
+      </div>
+
       {/* 차트 카드: 파이/막대 차트로 주요 분포 시각화 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <ChartCard
           title="고객 유형별 분포"
           data={data.customerTypeData}
@@ -326,18 +350,13 @@ const Dashboard: React.FC = () => {
           data={data.riskLevelData}
           type="pie"
         />
-        {/* <ChartCard
-          title="결제 상태별 주문 분포"
-          data={data.paymentStatusData}
-          type="bar"
-        /> */}
         <ChartCard
           title="이슈 상태별 분포"
           data={data.issueStatusData}
           type="bar"
         />
         <ChartCard
-          title="이슈별 분포"
+          title="이슈 타입별 분포"
           data={data.issueTypeData}
           type="bar"
         />
