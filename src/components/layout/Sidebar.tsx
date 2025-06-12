@@ -45,7 +45,7 @@ const coreMenuItems = [
   { path: '/issues', label: '이슈', icon: AlertTriangle, gradient: 'from-yellow-500 to-orange-500' },
   { path: '/claims', label: '클레임', icon: Shield, gradient: 'from-slate-500 to-gray-500' },
   { path: '/profit-grade', label: '고객 수익 등급', icon: DollarSign, gradient: 'from-green-500 to-teal-500' },
-  { path: '/order-forecast', label: '고객 주문 예측', icon: TrendingUp, gradient: 'from-blue-500 to-purple-500' },
+  { path: '/order-forecast', label: '고객 주문 예측', icon: TrendingDown, gradient: 'from-blue-500 to-purple-500' },
   { path: '/priority-dashboard', label: '우선순위 대시보드', icon: Star, gradient: 'from-yellow-500 to-amber-500' },
 ];
 
@@ -145,7 +145,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isCollapsed, onColl
                     <Icon className="w-5 h-5" />
                   </div>
                   {/* 메뉴 라벨: 접힌 상태에서는 숨김 */}
-                  <span className={`ml-3 font-medium transition-all duration-300 ${isCollapsed ? 'md:opacity-0 md:hidden' : 'opacity-100'}`}>
+                  <span className={`ml-3 font-medium transition-all duration-300 w-full truncate ${isCollapsed ? 'md:opacity-0 md:hidden' : 'opacity-100'}`}>
                     {item.label}
                   </span>
                   

@@ -38,7 +38,7 @@ interface DataTableProps {
     key: string;
     label: string;
     type: 'text' | 'select' | 'multiSelect' | 'dateRange' | 'numberRange' | 'slider' | 'checkbox';
-    options?: Array<{ value: string; label: string }>;
+    options?: Array<{ value: string | number; label: string }>;
     min?: number;
     max?: number;
     step?: number;
@@ -243,17 +243,17 @@ const DataTable: React.FC<DataTableProps> = ({
             placeholder={searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 bg-white/80 backdrop-blur-sm border-white/30 shadow-sm"
           />
         </div>
         {/* 내보내기 버튼: CSV, JSON 파일로 데이터 다운로드 (옵션) */}
         {exportable && (
           <div className="flex space-x-2">
-            <Button variant="outline" size="sm" onClick={exportToCSV}>
+            <Button variant="outline" size="sm" onClick={exportToCSV} className="bg-white/80 backdrop-blur-sm border-white/30 hover:bg-white/90">
               <FileSpreadsheet className="w-4 h-4 mr-2" />
               CSV
             </Button>
-            <Button variant="outline" size="sm" onClick={exportToJSON}>
+            <Button variant="outline" size="sm" onClick={exportToJSON} className="bg-white/80 backdrop-blur-sm border-white/30 hover:bg-white/90">
               <FileText className="w-4 h-4 mr-2" />
               JSON
             </Button>
@@ -289,13 +289,13 @@ const DataTable: React.FC<DataTableProps> = ({
       </div>
 
       {/* 실제 테이블 표시 영역 */}
-      <div className="border rounded-lg overflow-hidden">
+      <div className="glass-card rounded-xl overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
               {/* 컬럼 헤더 표시 */}
               {columns.map((column) => (
-                <TableHead key={column.key} className="bg-gray-50 font-semibold">
+                <TableHead key={column.key} className="bg-muted/30 backdrop-blur-sm font-semibold">
                   {column.label}
                 </TableHead>
               ))}
@@ -306,12 +306,12 @@ const DataTable: React.FC<DataTableProps> = ({
             {paginatedData.map((row, index) => (
               <TableRow 
                 key={index} 
-                className={onRowClick ? "cursor-pointer hover:bg-muted/50" : ""}
+                className={onRowClick ? "cursor-pointer hover:bg-muted/40" : ""}
                 onClick={() => onRowClick?.(row)}
               >
                 {/* 각 셀에 데이터 표시 (커스텀 렌더링 함수가 있으면 그것 사용) */}
                 {columns.map((column) => (
-                  <TableCell key={column.key}>
+                  <TableCell key={column.key} className="border-b border-white/10">
                     {column.render ? 
                       column.render(row[column.key], row) : 
                       String(row[column.key] || '-')
@@ -326,7 +326,7 @@ const DataTable: React.FC<DataTableProps> = ({
 
       {/* 데이터가 없을 때 안내 문구 */}
       {paginatedData.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-500 glass-card rounded-xl">
           {searchTerm || Object.keys(advancedFilters).length > 0 
             ? "검색 결과가 없습니다." 
             : "데이터가 없습니다."
@@ -346,7 +346,7 @@ const DataTable: React.FC<DataTableProps> = ({
                   size="sm"
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1 bg-white/80 backdrop-blur-sm border-white/30"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   이전
@@ -361,7 +361,7 @@ const DataTable: React.FC<DataTableProps> = ({
                     <PaginationLink
                       onClick={() => handlePageChange(page as number)}
                       isActive={currentPage === page}
-                      className="cursor-pointer"
+                      className={`cursor-pointer ${currentPage === page ? 'bg-primary text-white' : 'bg-white/80 backdrop-blur-sm border-white/30'}`}
                     >
                       {page}
                     </PaginationLink>
@@ -375,7 +375,7 @@ const DataTable: React.FC<DataTableProps> = ({
                   size="sm"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-1 bg-white/80 backdrop-blur-sm border-white/30"
                 >
                   다음
                   <ChevronRight className="h-4 w-4" />
