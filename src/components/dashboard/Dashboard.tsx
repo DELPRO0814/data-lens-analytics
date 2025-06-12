@@ -53,6 +53,7 @@ interface DashboardData {
   riskLevelData: any[];             // 위험도별 세그먼트 분포(파이차트)
   paymentStatusData: any[];         // 결제 상태별 주문 분포(막대차트)
   issueStatusData: any[];           // 이슈 상태별 분포(막대차트)
+  issueTypeData: any[];             // 이슈 타입 (막대차트트)
 }
 
 // 대시보드 컴포넌트
@@ -83,14 +84,16 @@ const Dashboard: React.FC = () => {
         productsResult,
         predictionsResult,
         ordersResult,
-        issuesResult
+        issuesResult,
+        issueTypeCountResult
       ] = await Promise.all([
         supabase.from('customers').select('*'),
         supabase.from('contacts').select('*'),
         supabase.from('products').select('*'),
         supabase.from('predictions').select('*'),
         supabase.from('orders').select('*'),
-        supabase.from('issues').select('*')
+        supabase.from('issues').select('*'),
+        supabase.from('issues').select('*'),
       ]);
 
       // 에러 발생 시 예외 처리
@@ -100,6 +103,7 @@ const Dashboard: React.FC = () => {
       if (predictionsResult.error) throw predictionsResult.error;
       if (ordersResult.error) throw ordersResult.error;
       if (issuesResult.error) throw issuesResult.error;
+      if (issueTypeCountResult.error) throw issueTypeCountResult.error;
 
       // 각 테이블 데이터 추출(없으면 빈 배열)
       const customers = customersResult.data || [];
@@ -108,6 +112,7 @@ const Dashboard: React.FC = () => {
       const predictions = predictionsResult.data || [];
       const orders = ordersResult.data || [];
       const issues = issuesResult.data || [];
+      const issueTypeCount = issueTypeCountResult.data || [];
 
       // 핵심 메트릭 계산
       const totalCustomers = customers.length;
@@ -178,6 +183,18 @@ const Dashboard: React.FC = () => {
         return acc;
       }, [] as any[]);
 
+      // 이슈 타입별 데이터 준비
+      const issueTypeData = issues.reduce((acc, issue) => {
+        const type = issue.issue_type || '알 수 없음';
+        const existing = acc.find(item => item.name === type);
+        if (existing) {
+          existing.value++;
+        } else {
+          acc.push({ name: type, value: 1 });
+        }
+        return acc;
+      }, [] as any[]);
+
       // 모든 대시보드 데이터 상태에 저장
       setData({
         totalCustomers,
@@ -193,7 +210,8 @@ const Dashboard: React.FC = () => {
         customerTypeData,
         riskLevelData,
         paymentStatusData,
-        issueStatusData
+        issueStatusData,
+        issueTypeData
       });
 
     } catch (error) {
@@ -308,14 +326,19 @@ const Dashboard: React.FC = () => {
           data={data.riskLevelData}
           type="pie"
         />
-        <ChartCard
+        {/* <ChartCard
           title="결제 상태별 주문 분포"
           data={data.paymentStatusData}
           type="bar"
-        />
+        /> */}
         <ChartCard
           title="이슈 상태별 분포"
           data={data.issueStatusData}
+          type="bar"
+        />
+        <ChartCard
+          title="이슈별 분포"
+          data={data.issueTypeData}
           type="bar"
         />
       </div>

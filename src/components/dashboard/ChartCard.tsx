@@ -59,7 +59,12 @@ const ChartCard: React.FC<ChartCardProps> = ({
               <XAxis dataKey={nameKey} />              {/* X축: 이름 */}
               <YAxis />                                {/* Y축: 값 */}
               <Tooltip />                              {/* 마우스 오버 시 툴팁 */}
-              <Bar dataKey={dataKey} fill="#3B82F6" /> {/* 데이터 막대 */}
+              {/*<Bar dataKey={dataKey} fill="#3B82F6" />*/} {/* 데이터 막대 */}
+              <Bar dataKey={dataKey}>
+                {data.map((entry, index) => (
+                  <Cell key={`bar-cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Bar> {/* 데이터 막대 */}
             </BarChart>
           ) : (
             // 파이 차트
