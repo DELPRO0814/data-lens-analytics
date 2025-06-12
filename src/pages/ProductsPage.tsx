@@ -22,6 +22,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/common/PageHeader';
 import DataTable from '@/components/common/DataTable';
+import { Badge } from "@/components/ui/badge";
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { 
+  Copy, 
+  Package, 
+  Car, 
+  Truck, 
+  Zap, 
+  Rocket, 
+  Tv, 
+  Laptop, 
+  Ruler, 
+  Banknote 
+} from 'lucide-react';
 
 const ProductsPage = () => {
   // 상태 관리
@@ -36,9 +51,6 @@ const ProductsPage = () => {
 
   /**
    * 제품 데이터 조회 함수
-   * - Supabase products 테이블 전체 조회
-   * - 모델명(model) 기준 오름차순 정렬
-   * - 에러 발생 시 토스트 알림 및 콘솔 로깅
    */
   const fetchProducts = async () => {
     try {
@@ -61,29 +73,160 @@ const ProductsPage = () => {
     }
   };
 
-  // 테이블 컬럼 정의
-  const columns = [
-    { key: 'product_id', label: '제품 ID' },
-    { key: 'model', label: '모델명' },
-    { key: 'category', label: '카테고리' },
-    { 
-      key: 'inch', 
-      label: '크기(인치)',
-      render: (value: number) => value ? `${value}"` : '-'  // 인치 단위 추가
-    },
-    { 
-      key: 'originalprice', 
-      label: '원가',
-      render: (value: number) => value ? `${value.toLocaleString()}원` : '-'  // 통화 포맷
-    },
-    { 
-      key: 'sellingprice', 
-      label: '판매가',
-      render: (value: number) => value ? `${value.toLocaleString()}원` : '-' 
-    },
-    { key: 'notes', label: '비고' }
-  ];
+  /**
+   * 클립보드 복사 핸들러
+   * @param text 복사할 텍스트
+   */
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "복사 완료",
+      description: `${text}가 클립보드에 복사되었습니다.`,
+    });
+  };
 
+  // --- ✨ 테이블 컬럼 정의 (UI 개선) ---
+  const columns = [
+  { 
+    key: 'product_id', 
+    label: '제품 ID',
+    render: (value: string) => (
+      <div className="flex items-center gap-2 font-mono text-sm">
+        <span>{value}</span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(value)}>
+              <Copy className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>ID 복사하기</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    )
+  },
+  { 
+    key: 'model', 
+    label: '모델명',
+    render: (value, row) => (
+      <div className="flex items-start gap-3">
+        <Package className="h-5 w-5 text-muted-foreground mt-1 flex-shrink-0" />
+        <div>
+          <p className="font-medium text-foreground">{value}</p>
+          {row.notes && (
+            <p className="text-sm text-muted-foreground">{row.notes}</p>
+          )}
+        </div>
+      </div>
+    )
+  },
+  { 
+    key: 'category', 
+    label: '카테고리',
+    render: (value: string) => {
+      const categoryMap = {
+        '스포츠': { icon: <Rocket className="h-3 w-3" />, variant: 'default' },
+        'SUV': { icon: <Car className="h-3 w-3" />, variant: 'secondary' },
+        '전기차': { icon: <Zap className="h-3 w-3" />, variant: 'outline' },
+        '승용차': { icon: <Laptop className="h-3 w-3" />, variant: 'secondary' },
+        '레이싱': { icon: <Rocket className="h-3 w-3" />, variant: 'destructive' },
+        '트럭': { icon: <Truck className="h-3 w-3" />, variant: 'outline' },
+        'default': { icon: <Package className="h-3 w-3" />, variant: 'outline' }
+      };
+      const style = categoryMap[value] || categoryMap['default'];
+      
+      return (
+        <Badge variant={style.variant} className="gap-1.5 whitespace-nowrap">
+          {style.icon}
+          {value || '-'}
+        </Badge>
+      );
+    }
+  },
+  { 
+    key: 'originalprice', 
+    label: '원가',
+    // [수정] align: 'right' 제거 및 flex 정렬 변경
+    render: (value) => (
+      <div className="flex items-center justify-start gap-2">
+        <Banknote className="h-4 w-4 text-slate-400" />
+        <span>{`₩${(value || 0).toLocaleString()}`}</span>
+      </div>
+    )
+  },
+  { 
+    key: 'sellingprice', 
+    label: '판매가',
+    fontWeight: '500', 
+    // [수정] align: 'right' 제거 및 flex 정렬 변경
+    render: (value) => (
+      <div className="flex items-center justify-start gap-2 font-semibold">
+         <Banknote className="h-4 w-4 text-sky-500" />
+         <span className="text-sky-600">{`₩${(value || 0).toLocaleString()}`}</span>
+      </div>
+    )
+  },
+  { 
+    key: 'margin',
+    label: '마진율',
+    // [수정] align: 'center' 제거 및 flex 정렬 변경
+    render: (_, row) => {
+      const { originalprice, sellingprice } = row;
+      if (!originalprice || !sellingprice) {
+        return (
+          <div className="flex items-center justify-start">
+            <Badge variant="secondary">N/A</Badge>
+          </div>
+        );
+      }
+      
+      const marginRate = ((sellingprice - originalprice) / sellingprice) * 100;
+      
+      let badgeClassName: string;
+    let tooltipText: string;
+    
+    if (marginRate > 30) {
+      // 파란색 (수익성 최상)
+      badgeClassName = "border-transparent bg-blue-100 text-blue-800 hover:bg-blue-100/80 dark:bg-blue-900 dark:text-blue-200";
+      tooltipText = "수익성 최상 (30% 초과)";
+    } else if (marginRate > 20) {
+      // 녹색 (수익성 양호)
+      badgeClassName = "border-transparent bg-green-100 text-green-800 hover:bg-green-100/80 dark:bg-green-900 dark:text-green-200";
+      tooltipText = "수익성 양호 (20% 초과 ~ 30% 이하)";
+    } else {
+      // 노란색 (수익성 확인 필요)
+      badgeClassName = "border-transparent bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80 dark:bg-yellow-900 dark:text-yellow-200";
+      tooltipText = "수익성 확인 필요 (20% 이하)";
+    }
+
+    return (
+      <div className="flex items-center justify-start">
+        <Tooltip>
+          <TooltipTrigger>
+            {/* variant 대신 className을 사용하여 직접 색상을 지정합니다 */}
+            <Badge className={badgeClassName}>{marginRate.toFixed(1)}%</Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{tooltipText}</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    );
+  }
+},
+    { 
+    key: 'inch', 
+    label: '사이즈',
+    // [수정] align: 'center' 제거 및 flex 정렬 변경
+    render: (value) => value ? (
+      <div className="flex items-center justify-start gap-2">
+        <Ruler className="h-4 w-4 text-muted-foreground" />
+        <span>{`${value}"`}</span>
+      </div>
+    ) : '-'
+  },
+];
   // 필터 설정
   const filterFields = [
     {
@@ -148,23 +291,24 @@ const ProductsPage = () => {
   }
 
   return (
-    <div>
-      {/* 페이지 헤더 */}
-      <PageHeader 
-        title="제품 관리" 
-        description="판매 제품 정보를 관리합니다. 카테고리, 크기, 가격별로 필터링할 수 있습니다."
-      />
-      
-      {/* 제품 데이터 테이블 */}
-      <DataTable 
-        data={products}
-        columns={columns}
-        searchPlaceholder="제품명, 모델명으로 검색..."
-        filterFields={filterFields}
-        exportable={true}
-        tableName="products"
-      />
-    </div>
+    // TooltipProvider로 전체를 감싸야 툴팁이 정상 동작합니다.
+    <TooltipProvider>
+      <div>
+        <PageHeader 
+          title="제품 관리" 
+          description="판매 제품 정보를 관리합니다. 카테고리, 크기, 가격별로 필터링할 수 있습니다."
+        />
+        
+        <DataTable 
+          data={products}
+          columns={columns}
+          searchPlaceholder="제품명, 모델명으로 검색..."
+          filterFields={filterFields}
+          exportable={true}
+          tableName="products"
+        />
+      </div>
+    </TooltipProvider>
   );
 };
 

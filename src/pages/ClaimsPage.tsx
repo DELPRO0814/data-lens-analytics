@@ -17,11 +17,13 @@
  * - 확률/신뢰도는 소수점 → % 변환, 날짜는 locale 형식으로 포맷팅
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/common/PageHeader';
 import DataTable from '@/components/common/DataTable';
+import { Badge } from '@/components/ui/badge';
+import ClaimStatsCards from '@/components/claims/ClaimStatsCards';
 
 const ClaimsPage = () => {
   // 상태 관리: 클레임 데이터와 로딩 상태
@@ -64,50 +66,140 @@ const ClaimsPage = () => {
     }
   };
 
+  // ✅ 1. '데이터 평탄화' 로직 추가
+    const tableData = useMemo(() => {
+      if (!claims || claims.length === 0) return [];
+      
+      return claims.map(item => ({
+        ...item,
+        // 중첩된 데이터를 최상위 키로 만듭니다.
+        companyName: item.contacts?.customers?.company_name || '-',
+        managerName: item.contacts?.name || '-',
+      }));
+    }, [claims]);
+
   /**
    * 테이블 컬럼 정의
    * - key: 데이터 필드명
    * - label: 컬럼 헤더 텍스트
    * - render: 커스텀 렌더링 함수(옵션)
    */
-  const columns = [
-    // 클레임 고유 번호
-    { key: 'claim_id', label: '클레임번호' },
-    // 고객사명(contacts → customers 관계 탐색)
-    { 
-      key: 'contacts', 
-      label: '고객사',
-      render: (value: any) => value?.customers?.company_name || '-' 
-    },
-    // 담당자명(contacts 테이블 직접 참조)
-    { 
-      key: 'contacts', 
-      label: '담당자',
-      render: (value: any) => value?.name || '-' 
-    },
-    // AI 예측 클레임 수준(High/Medium/Low)
-    { key: 'predicted_claim_level', label: '예측 클레임 수준' },
-    // AI 예측 클레임 유형(Quality/Delivery 등)
-    { key: 'predicted_claim_type', label: '예측 클레임 유형' },
-    // 발생 확률(% 변환)
-    { 
-      key: 'predicted_claim_probability', 
-      label: '발생 확률',
-      render: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '-'
-    },
-    // AI 신뢰도(% 변환)
-    { 
-      key: 'confidence_score', 
-      label: '신뢰도',
-      render: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '-'
-    },
-    // 예측일(날짜 포맷 변환)
-    { 
-      key: 'prediction_date', 
-      label: '예측일',
-      render: (value: string) => value ? new Date(value).toLocaleDateString() : '-'
+  // 예측 클레임 수준에 따른 색상 맵
+const levelColorMap = {
+  High: 'red',
+  Medium: 'orange',
+  Low: 'green',
+};
+
+// ✅ [2. 추가] 요약 통계 계산 로직
+  const summaryStats = useMemo(() => {
+    const totalCount = tableData.length;
+    if (totalCount === 0) {
+      return { totalCount: 0, highRiskCount: 0, avgProbability: 0, avgConfidence: 0 };
     }
-  ];
+
+    const highRiskCount = tableData.filter(
+      (claim) => claim.predicted_claim_level === 'High'
+    ).length;
+
+    const totalProbability = tableData.reduce(
+      (sum, claim) => sum + (claim.predicted_claim_probability || 0), 0
+    );
+    const avgProbability = (totalProbability / totalCount) * 100;
+
+    const totalConfidence = tableData.reduce(
+      (sum, claim) => sum + (claim.confidence_score || 0), 0
+    );
+    const avgConfidence = (totalConfidence / totalCount) * 100;
+
+    return { totalCount, highRiskCount, avgProbability, avgConfidence };
+  }, [tableData]);
+
+ const columns = [
+  { 
+    key: 'claim_id', 
+    label: '클레임번호',
+    width: 120,
+    align: 'center' as const,
+    headerAlign: 'center' as const,
+    fontWeight: '600',
+    cellClassName: "font-mono text-muted-foreground"
+  },
+  { 
+    key: 'companyName',
+    label: '고객사',
+    minWidth: 150,
+    fontWeight: '500',
+  },
+  { 
+    key: 'managerName',
+    label: '담당자',
+    minWidth: 120,
+    sortable: false, // 담당자 이름은 정렬 기능 비활성화
+  },
+  { 
+    key: 'predicted_claim_level', 
+    label: '예측 클레임 수준',
+    align: 'center' as const,
+    headerAlign: 'center' as const,
+    width: 150,
+     render: (level: 'High' | 'Medium' | 'Low') => {
+      // ✅ [수정] Medium의 variant를 'default'로 변경하여 파란색으로 표시합니다.
+      const variant = level === 'High' ? 'destructive' : level === 'Medium' ? 'default' : 'secondary';
+      return <Badge variant={variant} className="text-xs px-2 py-0.5">{level || 'N/A'}</Badge>;
+    }
+  },
+  { 
+    key: 'predicted_claim_type', 
+    label: '예측 클레임 유형',
+    width: 150,
+  },
+  { 
+    key: 'predicted_claim_probability', 
+    label: '발생 확률',
+    align: 'right' as const,
+    headerAlign: 'right' as const,
+    width: 120,
+    // 확률 값에 따라 동적으로 글자 색상 변경
+    color: (value: number) => {
+      if (!value) return undefined;
+      if (value >= 0.7) return 'hsl(var(--destructive))'; // destructive 색상 (보통 빨간색)
+      if (value >= 0.5) return 'hsl(var(--primary))';     // primary 색상 (보통 주황/노란색 계열)
+      return undefined; // 기본값
+    },
+    render: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '-'
+  },
+  { 
+    key: 'confidence_score', 
+    label: '신뢰도',
+    width: 150,
+    sortable: false,
+    // 신뢰도 점수를 프로그레스 바 형태로 시각화
+    render: (value: number) => {
+      const score = (value || 0) * 100;
+      let bgColor = 'bg-green-500';
+      if (score < 80) bgColor = 'bg-yellow-500';
+      if (score < 60) bgColor = 'bg-red-500';
+      
+      return (
+        <div className="flex items-center gap-2">
+          <div className="w-full bg-muted rounded-full h-2.5">
+            <div className={`${bgColor} h-2.5 rounded-full`} style={{ width: `${score}%` }}></div>
+          </div>
+          <span className="font-semibold w-12 text-right">{score.toFixed(0)}%</span>
+        </div>
+      );
+    }
+  },
+  { 
+    key: 'prediction_date', 
+    label: '예측일',
+    align: 'center' as const,
+    headerAlign: 'center' as const,
+    width: 140,
+    render: (value: string) => value ? new Date(value).toLocaleDateString() : '-'
+  }
+];
 
   const filterFields = [
     {
@@ -149,6 +241,9 @@ const ClaimsPage = () => {
     return <div className="text-center py-8">클레임 데이터를 불러오는 중...</div>;
   }
 
+  
+
+
   return (
     <div>
       {/* 페이지 헤더: 제목과 설명 */}
@@ -157,9 +252,14 @@ const ClaimsPage = () => {
         description="AI 기반 클레임 발생 예측 정보를 관리합니다. 예측일, 유형, 신뢰도별로 필터링할 수 있습니다."
       />
       
+      {/* ✅ [3. 추가] 계산된 통계를 카드 섹션에 전달하여 렌더링 */}
+      <div className="mb-6">
+        <ClaimStatsCards stats={summaryStats} />
+      </div>
+
       {/* 데이터 테이블: 검색/필터/내보내기 기능 포함 */}
       <DataTable 
-        data={claims}
+        data={tableData}
         columns={columns}
         searchPlaceholder="클레임번호, 고객사로 검색..."
         filterFields={filterFields}
