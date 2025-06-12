@@ -109,13 +109,7 @@ const ClaimsPage = () => {
     }
   ];
 
-  /**
-   * 필터 설정
-   * - type: 필터 유형(multiSelect/dateRange/numberRange)
-   * - options: 선택형 필터의 옵션 목록
-   */
   const filterFields = [
-    // 클레임 수준 다중 선택 필터
     {
       key: 'predicted_claim_level',
       label: '예측 클레임 수준',
@@ -126,7 +120,6 @@ const ClaimsPage = () => {
         { value: 'High', label: '높음' }
       ]
     },
-    // 클레임 유형 다중 선택 필터
     {
       key: 'predicted_claim_type',
       label: '예측 클레임 유형',
@@ -135,16 +128,15 @@ const ClaimsPage = () => {
         { value: '제품 불량', label: '품질' },
         { value: '배송 지연', label: '배송' },
         { value: '기타 문제', label: '기타' },
-        { value: ['없음', '알 수 없음'], label: '없음/알 수 없음' },
+        { value: '없음', label: '없음' },
+        { value: '알 수 없음', label: '알 수 없음' }
       ]
     },
-    // 예측일 범위 선택 필터
     {
       key: 'prediction_date',
       label: '예측일',
       type: 'dateRange' as const
     },
-    // 신뢰도 범위 입력 필터(0~1 사이 값)
     {
       key: 'confidence_score',
       label: '신뢰도',
@@ -170,7 +162,7 @@ const ClaimsPage = () => {
         data={claims}
         columns={columns}
         searchPlaceholder="클레임번호, 고객사로 검색..."
-        filterFields={filterFields} // 빨간줄이 생겼지만 작동에 문제는 없음
+        filterFields={filterFields}
         exportable={true}
         tableName="claims"
       />

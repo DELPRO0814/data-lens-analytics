@@ -1,3 +1,4 @@
+
 /**
  * AdvancedFilter 컴포넌트
  * -----------------------------------------------------
@@ -34,7 +35,7 @@ interface FilterField {
   key: string; // 필드의 고유 이름(데이터에서 어떤 값을 필터링할지 지정)
   label: string; // 사용자에게 보여줄 라벨
   type: 'text' | 'select' | 'multiSelect' | 'dateRange' | 'numberRange' | 'slider' | 'checkbox'; // 필터 종류
-  options?: Array<{ value: string; label: string }>; // select/multiSelect 타입에서 선택지 목록
+  options?: Array<{ value: string | number; label: string }>; // select/multiSelect 타입에서 선택지 목록 - string 또는 number 값 지원
   min?: number; // slider/numberRange에서 최소값
   max?: number; // slider/numberRange에서 최대값
   step?: number; // slider에서 증가 단위
@@ -96,7 +97,7 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ fields, onFilterChange,
             <SelectContent className="bg-white border shadow-lg z-50">
               <SelectItem value="all">전체</SelectItem>
               {field.options?.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
+                <SelectItem key={String(option.value)} value={String(option.value)}>
                   {option.label}
                 </SelectItem>
               ))}
@@ -109,19 +110,19 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({ fields, onFilterChange,
         return (
           <div className="space-y-2">
             {field.options?.map((option) => (
-              <div key={option.value} className="flex items-center space-x-2">
+              <div key={String(option.value)} className="flex items-center space-x-2">
                 <Checkbox
-                  id={`${field.key}-${option.value}`}
+                  id={`${field.key}-${String(option.value)}`}
                   checked={value?.includes(option.value) || false}
                   onCheckedChange={(checked) => {
                     const currentValues = value || [];
                     const newValues = checked
                       ? [...currentValues, option.value]
-                      : currentValues.filter((v: string) => v !== option.value);
+                      : currentValues.filter((v: any) => v !== option.value);
                     handleFilterChange(field.key, newValues);
                   }}
                 />
-                <label htmlFor={`${field.key}-${option.value}`} className="text-sm">
+                <label htmlFor={`${field.key}-${String(option.value)}`} className="text-sm">
                   {option.label}
                 </label>
               </div>

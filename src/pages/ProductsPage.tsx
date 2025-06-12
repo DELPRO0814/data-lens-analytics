@@ -88,7 +88,7 @@ const ProductsPage = () => {
   const filterFields = [
     {
       key: 'model',
-      label: '모델델',
+      label: '모델명',
       type: 'multiSelect' as const,  // 다중 선택 필터
       options: [
         { value: 'Dynapro HPX / Dynapro HT', label: 'Dynapro HPX / Dynapro HT' },
@@ -98,7 +98,6 @@ const ProductsPage = () => {
         { value: 'Smart Control / Smart Work', label: 'Smart Control / Smart Work' },
         { value: 'Smart Flex', label: 'Smart Flex' },
         { value: 'Ventus RS4', label: 'Ventus RS4' },
-        { value: 'iON', label: 'iON' },
         { value: 'Ventus S1 evo3', label: 'Ventus S1 evo3' },
         { value: 'Ventus S2 AS', label: 'Ventus S2 AS' },
         { value: 'Ventus V12 evo2', label: 'Ventus V12 evo2' },
@@ -122,13 +121,13 @@ const ProductsPage = () => {
       label: '크기 (인치)',
       type: 'multiSelect' as const,  // 슬라이더 필터
       options: [
-        { value: 15, label: "15"},
-        { value: 16, label: "16"},
-        { value: 17, label: "17"},
-        { value: 18, label: "18"},
-        { value: 19, label: "19"},
-        { value: 20, label: "20"},
-        { value: 21, label: "21"},
+        { value: '15', label: "15" },
+        { value: '16', label: "16" },
+        { value: '17', label: "17" },
+        { value: '18', label: "18" },
+        { value: '19', label: "19" },
+        { value: '20', label: "20" },
+        { value: '21', label: "21" },
       ]
     },
     {
