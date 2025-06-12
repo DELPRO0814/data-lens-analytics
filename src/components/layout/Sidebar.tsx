@@ -75,9 +75,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isCollapsed, onColl
       
       {/* 실제 사이드바 영역 */}
       <div className={`
-        fixed left-0 top-0 h-full glass-sidebar z-30 transition-all duration-300 ease-in-out
+        fixed left-0 top-0 h-full glass-sidebar z-30 transition-all duration-00 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}      // 모바일: 열림/닫힘 슬라이드
-        md:translate-x-0 md:static md:z-auto                   // 데스크탑: 항상 보임
+        md:translate-x-0 md:static md:z-999                   // 데스크탑: 항상 보임
         ${isCollapsed ? 'md:w-20' : 'md:w-72'}                // 데스크탑: 접힘/펼침 너비
         w-72
       `}>
@@ -113,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isCollapsed, onColl
         </div>
 
         {/* 메뉴 리스트 */}
-        <nav className="mt-6 px-4">
+        <nav className="mt-6 px-0.5">
           <div className="space-y-2">
             {menuItems.map((item, index) => {
               const Icon = item.icon;
@@ -139,7 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isCollapsed, onColl
                 >
                   {/* 메뉴 아이콘 */}
                   <div className={`
-                    flex-shrink-0 p-2 rounded-lg transition-all duration-200
+                    flex-shrink-0 p-1 rounded-lg transition-all duration-200
                     ${isActive ? 'bg-white/20' : 'group-hover:bg-white/20'}
                   `}>
                     <Icon className="w-5 h-5" />
