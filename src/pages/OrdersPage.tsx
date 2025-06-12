@@ -19,6 +19,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/common/PageHeader';
 import DataTable from '@/components/common/DataTable';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, Truck } from 'lucide-react';
 
 const OrdersPage = () => {
   // 상태 관리
@@ -64,35 +66,102 @@ const OrdersPage = () => {
 
   // 테이블 컬럼 설정
   const columns = [
-    { key: 'order_id', label: '주문번호' },
-    { 
-      key: 'contacts', 
-      label: '고객사',
-      render: (value: any) => value?.customers?.company_name || '-'  // 3단계 관계형 데이터 접근
-    },
-    { 
-      key: 'products', 
-      label: '제품',
-      render: (value: any) => value?.model || '-'  // 제품 모델명 표시
-    },
-    { 
-      key: 'quantity', 
-      label: '수량',
-      render: (value: number) => value ? `${value.toLocaleString()}개` : '-'  // 천단위 콤마 포맷
-    },
-    { 
-      key: 'amount', 
-      label: '금액',
-      render: (value: number) => value ? `${value.toLocaleString()}원` : '-'  // 통화 포맷
-    },
-    { key: 'payment_status', label: '결제상태' },
-    { key: 'delivery_status', label: '배송상태' },
-    { 
-      key: 'order_date', 
-      label: '주문일',
-      render: (value: string) => value ? new Date(value).toLocaleDateString() : '-'  // 날짜 포맷 변환
+  { 
+    key: 'order_id', 
+    label: '주문번호',
+    render: (value: number) => (
+      <span className="font-medium text-gray-800">#{value}</span>
+    )
+  },
+  { 
+    key: 'contacts', 
+    label: '고객사',
+    render: (value: any) => value?.customers?.company_name || '-'
+  },
+  // [추가] 담당자 컬럼
+  { 
+    key: 'contacts', 
+    label: '담당자',
+    render: (value: any) => value?.name || '-'
+  },
+  { 
+    key: 'products', 
+    label: '제품',
+    render: (value: any, row: any) => (
+      <div>
+        <p className="font-medium">{value?.model || row.product_id || '-'}</p>
+        {/* Supabase select 쿼리에 category를 추가하면 제품 카테고리도 표시할 수 있습니다. */}
+        {value?.category && <p className="text-sm text-gray-500">{value.category}</p>}
+      </div>
+    )
+  },
+  { 
+    key: 'quantity', 
+    label: '수량',
+    render: (value: number) => value ? `${value.toLocaleString()} 개` : '-'
+  },
+  { 
+    key: 'amount', 
+    label: '주문금액',
+    render: (value: number) => (
+      <span className="font-medium">
+        ₩{value ? value.toLocaleString() : '0'}
+      </span>
+    )
+  },
+  // [추가] 마진율 컬럼
+  {
+    key: 'margin_rate',
+    label: '마진율',
+    render: (value: number) => {
+      const rate = (value || 0) * 1;
+      // 마진율이 15% 초과 시 녹색으로 강조
+      const textColor = rate > 15 ? 'text-green-600' : 'text-gray-600';
+      return (
+        <span className={`${textColor} font-medium`}>
+          {rate.toFixed(1)}%
+        </span>
+      );
     }
-  ];
+  },
+  { 
+    key: 'order_date', 
+    label: '주문일',
+    render: (value: string) => (
+      <div className="flex items-center gap-2 text-gray-600">
+        <Calendar className="w-4 h-4" />
+        {value ? new Date(value).toLocaleDateString() : '-'}
+      </div>
+    )
+  },
+  { 
+    key: 'payment_status', 
+    label: '결제상태',
+    render: (value: string) => {
+      let variant: 'default' | 'destructive' | 'outline' = 'outline';
+      if (value === '결제완료') variant = 'default';
+      else if (value === '결제대기') variant = 'destructive';
+      
+      return <Badge variant={variant}>{value || '미분류'}</Badge>;
+    }
+  },
+  { 
+    key: 'delivery_status', 
+    label: '배송상태',
+    render: (value: string) => {
+      let variant: 'default' | 'secondary' | 'outline' = 'outline';
+      if (value === '배송완료') variant = 'default';
+      else if (value === '배송중') variant = 'secondary';
+      
+      return (
+        <div className="flex items-center gap-2">
+          <Truck className="w-4 h-4 text-gray-400" />
+          <Badge variant={variant}>{value || '미분류'}</Badge>
+        </div>
+      );
+    }
+  },
+];
 
   // 필터 설정
   const filterFields = [

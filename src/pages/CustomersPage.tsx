@@ -26,6 +26,8 @@ import PageHeader from '@/components/common/PageHeader';
 import DataTable from '@/components/common/DataTable';
 import AlertBanner from '@/components/common/AlertBanner';
 import AddCustomerModal from '@/components/customer/AddCustomerModal';
+import { Badge } from '@/components/ui/badge';
+
 
 const CustomersPage = () => {
   // 상태 관리
@@ -94,31 +96,74 @@ const CustomersPage = () => {
   };
 
   // 테이블 컬럼 설정
-  const columns = [
-    { 
-      key: 'company_name', 
-      label: '회사명',
-      // 회사명을 클릭하면 상세 페이지로 이동하는 링크 렌더링
-      render: (value: string, row: any) => (
-        <Link 
-          to={`/customers/${row.customer_id}`}
-          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-        >
-          {value}
-        </Link>
-      )
-    },
-    { key: 'company_type', label: '회사 유형' },
-    { key: 'industry_type', label: '업종' },
-    { key: 'company_size', label: '회사 규모' },
-    { key: 'region', label: '지역' },
-    { key: 'country', label: '국가' },
-    { 
-      key: 'reg_date', 
-      label: '등록일',
-      render: (value: string) => value ? new Date(value).toLocaleDateString() : '-' 
+  // [추가] 회사 유형에 따른 Badge 스타일 맵
+const typeVariantMap = {
+  '고객사': 'default',
+  '협력사': 'outline',
+  '잠재고객': 'secondary',
+};
+
+// [추가] 회사 규모에 따른 Badge 스타일 맵
+const sizeVariantMap = {
+  '대기업': 'default',
+  '중소기업': 'secondary',
+  '스타트업': 'outline',
+};
+
+const columns = [
+  { 
+    key: 'company_name', 
+    label: '회사명',
+    // 기존 링크 기능은 그대로 유지합니다.
+    render: (value, row) => (
+      <Link 
+        to={`/customers/${row.customer_id}`}
+        className="font-medium text-primary underline-offset-4 hover:underline"
+      >
+        {value}
+      </Link>
+    )
+  },
+  { 
+    key: 'company_type', 
+    label: '회사 유형',
+    // [Badge 적용] 회사 유형에 따라 다른 스타일의 배지를 보여줍니다.
+    render: (value) => {
+      const variant = typeVariantMap[value] || 'secondary';
+      return <Badge variant={variant}>{value}</Badge>;
     }
-  ];
+  },
+  { 
+    key: 'industry_type', 
+    label: '업종',
+    // [Badge 적용] 업종은 일관된 아웃라인 스타일로 태그처럼 표시합니다.
+    render: (value) => value ? <Badge variant="outline">{value}</Badge> : '-'
+  },
+  { 
+    key: 'company_size', 
+    label: '회사 규모',
+    // [Badge 적용] 회사 규모에 따라 다른 스타일의 배지를 보여줍니다.
+    render: (value) => {
+      const variant = sizeVariantMap[value] || 'secondary';
+      return <Badge variant={variant}>{value}</Badge>;
+    }
+  },
+  { 
+    key: 'region', 
+    label: '지역',
+    // [Badge 적용] 지역 정보는 회색(secondary) 배지로 간결하게 표시합니다.
+    render: (value) => value ? <Badge variant="secondary">{value}</Badge> : '-'
+  },
+  { 
+    key: 'country', 
+    label: '국가' 
+  },
+  { 
+    key: 'reg_date', 
+    label: '등록일',
+    render: (value) => value ? new Date(value).toLocaleDateString() : '-' 
+  }
+];
 
   // 필터 설정
   const filterFields = [
