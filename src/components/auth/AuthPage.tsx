@@ -32,9 +32,9 @@ const AuthPage: React.FC = () => {
   // 로그인/회원가입 모드 상태(true면 로그인, false면 회원가입)
   const [isLogin, setIsLogin] = useState(true);
   // 입력된 이메일 값
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('asdf@asdf.asdf');
   // 입력된 비밀번호 값
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('123123');
   // 비밀번호를 보이게 할지 여부(토글)
   const [showPassword, setShowPassword] = useState(false);
   // 인증 처리 중 로딩 상태(버튼 비활성화 등)
