@@ -28,7 +28,6 @@ import AlertBanner from '@/components/common/AlertBanner';
 import AddCustomerModal from '@/components/customer/AddCustomerModal';
 import { Badge } from '@/components/ui/badge';
 
-
 const CustomersPage = () => {
   // 상태 관리
   const [customers, setCustomers] = useState([]);      // 고객사 목록 데이터

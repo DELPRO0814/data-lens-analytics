@@ -15,6 +15,23 @@
  * - 로딩/에러 상태를 처리하며, 실무에서 바로 활용 가능한 구조입니다.
  */
 
+/**
+ * PriorityDashboardPage 컴포넌트
+ * -----------------------------------------------------
+ * 주요 동작 요약:
+ * - 고위험 고객(세그먼트/클레임), 미해결 이슈 등 즉시 관리가 필요한 고객과 이슈를 통합적으로 대시보드로 제공합니다.
+ * - Supabase에서 여러 테이블(segments, claims, sales_activities, issues)을 병렬로 조회해 데이터를 결합합니다.
+ * - 주요 지표 카드(고위험 세그먼트, 클레임 위험, 평균 CLV, 긴급 이슈), 위험 유형별 파이차트, 상위 고객 CLV 바차트, 상세 테이블을 제공합니다.
+ * - 데이터 결합, 통계 산출, 차트 데이터 가공 등 실무 대시보드에 필요한 모든 로직이 포함되어 있습니다.
+ *
+ * 상세 설명:
+ * - fetchPriorityData에서 4개 테이블을 병렬로 조회, 회사명 기준으로 데이터를 결합해 고위험 고객 목록을 만듭니다.
+ * - 세그먼트/클레임/이슈 각각의 위험 건수, 평균 CLV, 미해결 이슈 수 등 주요 통계를 산출합니다.
+ * - PieChart, BarChart로 위험 유형별 분포와 상위 고객 CLV를 시각화합니다.
+ * - 상세 테이블에서 고객사, 담당자, CLV, 위험도, 클레임 확률, 최근 활동일을 한눈에 확인할 수 있습니다.
+ * - 로딩/에러 상태를 처리하며, 실무에서 바로 활용 가능한 구조입니다.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -22,9 +39,11 @@ import PageHeader from '@/components/common/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { AlertTriangle, TrendingUp, DollarSign, Calendar } from 'lucide-react';
+import { Link } from 'react-router-dom'; // << [수정 1] Link 컴포넌트 import
 
 // 고위험 고객 데이터 타입 정의
 interface CombinedCustomerData {
+  customer_id: number | string; // << [수정 2] customer_id 속성 추가
   company: string;
   contact: string;
   clv: number;
@@ -44,7 +63,7 @@ const PriorityDashboardPage = () => {
     urgentIssues: 0
   });
   // 차트 데이터 상태
-  const [chartData, setChartData] = useState([]);
+  const [chartData, setChartData] = useState<any[]>([]);
   // 로딩 상태
   const [loading, setLoading] = useState(true);
   // 토스트 알림 훅
@@ -98,29 +117,33 @@ const PriorityDashboardPage = () => {
       // 세그먼트 데이터 처리
       segmentData?.forEach(segment => {
         const key = segment.contacts?.customers?.company_name;
-        if (key && !combinedData[key]) {
+        const customerId = segment.contacts?.customers?.customer_id; // << [수정 3] customer_id 추출
+        if (key && !combinedData[key] && customerId) {
           combinedData[key] = {
+            customer_id: customerId, // << [수정 3] customer_id 저장
             company: key,
             contact: segment.contacts?.name || '',
             clv: segment.clv || 0,
             riskLevel: segment.predicted_risk_level || 'Unknown',
             claimProbability: 0,
-            lastActivity: activityData?.find(a => a.customer_id === segment.contacts?.customers?.customer_id)?.activity_date || null
+            lastActivity: activityData?.find(a => a.customer_id === customerId)?.activity_date || null
           };
         }
       });
       // 클레임 데이터 처리 및 결합
       claimData?.forEach(claim => {
         const key = claim.contacts?.customers?.company_name;
-        if (key) {
+        const customerId = claim.contacts?.customers?.customer_id; // << [수정 3] customer_id 추출
+        if (key && customerId) {
           if (!combinedData[key]) {
             combinedData[key] = {
+              customer_id: customerId, // << [수정 3] customer_id 저장
               company: key,
               contact: claim.contacts?.name || '',
               clv: 0,
               riskLevel: claim.predicted_claim_level || 'Unknown',
               claimProbability: claim.predicted_claim_probability || 0,
-              lastActivity: activityData?.find(a => a.customer_id === claim.contacts?.customers?.customer_id)?.activity_date || null
+              lastActivity: activityData?.find(a => a.customer_id === customerId)?.activity_date || null
             };
           } else {
             combinedData[key].claimProbability = claim.predicted_claim_probability || 0;
@@ -174,8 +197,8 @@ const PriorityDashboardPage = () => {
   return (
     <div className="space-y-6">
       {/* 페이지 헤더 */}
-      <PageHeader 
-        title="우선순위 대시보드" 
+      <PageHeader
+        title="우선순위 대시보드"
         description="고위험 고객 및 즉시 대응이 필요한 이슈를 관리합니다."
       />
 
@@ -260,8 +283,8 @@ const PriorityDashboardPage = () => {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={highRiskCustomers.slice(0, 10)}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="company" 
+                <XAxis
+                  dataKey="company"
                   angle={-45}
                   textAnchor="end"
                   height={80}
@@ -298,15 +321,23 @@ const PriorityDashboardPage = () => {
               <tbody>
                 {highRiskCustomers.slice(0, 20).map((customer, index) => (
                   <tr key={index} className="hover:bg-gray-50">
-                    <td className="border border-gray-300 px-4 py-2">{customer.company || '-'}</td>
+                    {/* // << [수정 4] 고객사명에 Link 적용 시작 */}
+                    <td className="border border-gray-300 px-4 py-2">
+                      <Link
+                        to={`/customers/${customer.customer_id}`} // href -> to로 변경
+                        className="font-medium text-blue-600 underline-offset-4 hover:underline"
+                      >
+                        {customer.company || '-'}
+                      </Link>
+                      </td>
+                    {/* // << [수정 4] 고객사명에 Link 적용 끝 */}
                     <td className="border border-gray-300 px-4 py-2">{customer.contact || '-'}</td>
                     <td className="border border-gray-300 px-4 py-2">
                       {customer.clv ? `${customer.clv.toLocaleString()}원` : '-'}
                     </td>
                     <td className="border border-gray-300 px-4 py-2">
-                      <span className={`px-2 py-1 rounded text-sm ${
-                        customer.riskLevel === 'High' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
+                      <span className={`px-2 py-1 rounded text-sm ${customer.riskLevel === 'High' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
                         {customer.riskLevel}
                       </span>
                     </td>
