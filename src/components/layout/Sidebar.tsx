@@ -46,7 +46,7 @@ const coreMenuItems = [
   { path: '/claims', label: '클레임', icon: Shield, gradient: 'from-slate-500 to-gray-500' },
   { path: '/profit-grade', label: '고객 수익 등급', icon: DollarSign, gradient: 'from-green-500 to-teal-500' },
   //{ path: '/order-forecast', label: '고객 주문 예측', icon: TrendingDown, gradient: 'from-blue-500 to-purple-500' },
-  { path: '/priority-dashboard', label: '위험 관리', icon: Star, gradient: 'from-yellow-500 to-amber-500' },
+  { path: '/priority-dashboard', label: '우선순위 대시보드', icon: Star, gradient: 'from-yellow-500 to-amber-500' },
 ];
 
 // 선택적 메뉴 항목(optionalMenuItems): 필요 시 주석 해제하여 추가 가능
@@ -84,13 +84,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle, isCollapsed, onColl
         {/* 상단: 로고/타이틀 + 접기/닫기 버튼 */}
         <div className="flex items-center justify-between p-6 border-b border-white/20">
           {/* 타이틀: 접힌 상태에서는 숨김 */}
-          <div className={`transition-all duration-300 ${isCollapsed ? 'md:opacity-0 md:hidden' : 'opacity-100'}`}>
+          <Link to="/" className={`transition-all duration-300 ${isCollapsed ? 'md:opacity-0 md:hidden' : 'opacity-100'}`}
+          // 모바일에서 로고 클릭 시 사이드바가 닫히도록 onClick 추가
+          onClick={() => window.innerWidth < 768 && onToggle()}
+          >
             <h1 className="font-bold text-2xl gradient-text flex items-center gap-2">
               <Sparkles className="w-7 h-7 text-blue-500" />
               CRM 시스템
             </h1>
             <p className="text-sm text-gray-600 mt-1">비즈니스 관리 플랫폼</p>
-          </div>
+          </Link>
           <div className="flex items-center space-x-2">
             {/* 데스크탑: 접기/펼치기 버튼 */}
             <button
