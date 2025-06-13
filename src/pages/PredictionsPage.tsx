@@ -66,18 +66,48 @@ const PredictionsPage = () => {
       setLoading(false);
     }
   };
-
-  // ✅ 1. '데이터 평탄화' 로직 추가
-      const tableData = useMemo(() => {
-        if (!predictions || predictions.length === 0) return [];
+  // 예측 데이터를 테이블 형식으로 변환
+  // --- ✨ 2. useMemo를 사용하여 테이블 데이터 최적화 ---
+  // predictions 상태가 변경될 때만 테이블 데이터를 재계산합니다.
+  // 중첩된 contacts와 customers 데이터를 최상위 키로 변환하고, 상태를 계산합니다.
+  // 이로 인해 렌더링 성능이 향상됩니다.
+  // 예측 데이터에서 상태를 계산하고, 중첩된 데이터를 최상위 키로 만듭니다.
+  // 상태는 '일반', '임박', '지남', '날짜없음'으로 구분합니다.
+  // 예측 날짜가 없으면 '날짜없음', 오늘 이전이면 '지남', 오늘부터 한 달 이내면 '임박'으로 설정합니다.
+  const tableData = useMemo(() => {
+    if (!predictions || predictions.length === 0) return [];
+    
+    return predictions.map(item => {
+      // status 계산 로직
+      let status = '일반'; // 기본값
+      if (!item.predicted_date) {
+        status = '날짜없음';
+      } else {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const predictedDate = new Date(item.predicted_date);
+        predictedDate.setHours(0, 0, 0, 0);
         
-        return predictions.map(item => ({
-          ...item,
-          // 중첩된 데이터를 최상위 키로 만듭니다.
-          companyName: item.contacts?.customers?.company_name || '-',
-          contactsName: item.contacts?.name || '-',
-        }));
-      }, [predictions]);
+        const oneMonthFromNow = new Date(today);
+        oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+
+        if (predictedDate < today) {
+          status = '지남';
+        } else if (predictedDate <= oneMonthFromNow) {
+          status = '임박';
+        }
+      }
+      
+      return {
+        ...item,
+        // 중첩된 데이터를 최상위 키로 만듭니다.
+        companyName: item.contacts?.customers?.company_name || '-',
+        contactsName: item.contacts?.name || '-',
+        contactsPosition: item.contacts?.position || '', // 직책 추가
+        status: status, // 계산된 status 값을 데이터에 추가
+      };
+    });
+  }, [predictions]);
 
   // 테이블 컬럼 설정
   const columns = [
@@ -123,51 +153,42 @@ const PredictionsPage = () => {
     },
     {
   key: 'status',
-  label: '상태',
-  sortable: true, // DataTable에서 이 컬럼을 클릭하여 정렬할 수 있도록 설정
-  sortKey: 'predicted_date', // 정렬 시 실제로는 'predicted_date' 값을 기준으로 사용
-  render: (_, row: any) => {
-    // 예측 날짜가 없으면 '-' 표시
-    if (!row.predicted_date) {
-      return '-';
+      label: '상태',
+      // --- ✨ 3. 컬럼 렌더링 최적화 ---
+      // 미리 계산된 status 값을 사용하도록 render 함수 변경
+      render: (value) => {
+        switch (value) {
+          case '임박':
+            return <Badge variant="destructive">임박</Badge>;
+          case '일반':
+            return <Badge className="border-transparent bg-green-100 text-green-800 hover:bg-green-100/80">일반</Badge>;
+          case '지남':
+            return <Badge variant="outline">지남</Badge>;
+          default:
+            return '-';
+        }
+      }
     }
-
-    // 시간대를 무시하고 날짜만 비교하기 위해 모든 시간 정보를 자정으로 설정
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const predictedDate = new Date(row.predicted_date);
-    predictedDate.setHours(0, 0, 0, 0);
-
-    // 1. 예측 날짜가 오늘보다 이전(이미 지남)이면 '-'를 표시합니다.
-    if (predictedDate < today) {
-      return '-';
-    }
-    
-    // 2. 오늘로부터 한 달 후의 날짜를 계산합니다.
-    const oneMonthFromNow = new Date(today);
-    oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
-
-    // 3. 예측 날짜가 오늘부터 한 달 안에 포함되면 '임박' 뱃지를 표시합니다.
-    if (predictedDate <= oneMonthFromNow) {
-      return <Badge variant="destructive">임박</Badge>;
-    } 
-    
-    // 4. 예측 날짜가 한 달보다 더 미래이면 '일반' 뱃지를 표시합니다.
-    else {
-      return <Badge className="border-transparent bg-green-100 text-green-800 hover:bg-green-100/80">일반</Badge>;
-    }
-  }
-}
   ];
 
   // 필터 설정
   const filterFields = [
+    // {
+    //   key: 'predicted_product',
+    //   label: '예측 제품',
+    //   type: 'text' as const
+    // },
     {
-      key: 'predicted_product',
-      label: '예측 제품',
-      type: 'text' as const
+      key: 'status',
+      label: '상태',
+      type: 'multiSelect' as const,
+      options: [
+        { value: '임박', label: '임박' },
+        { value: '일반', label: '일반' },
+        { value: '지남', label: '지남' }
+      ]
     },
+
     {
       key: 'predicted_quantity',
       label: '예측 수량',

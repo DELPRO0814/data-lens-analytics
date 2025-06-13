@@ -14,15 +14,28 @@
  * - 모든 금액 관련 컬럼은 천 단위 콤마와 '원' 단위를 추가해 표시
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import PageHeader from '@/components/common/PageHeader';
 import DataTable from '@/components/common/DataTable';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Building2, 
+  User, 
+  Gem, 
+  Award, 
+  Medal,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Percent,
+  MinusCircle
+} from 'lucide-react';
 
 const ProfitGradePage = () => {
   // 상태 관리
-  const [grades, setGrades] = useState([]);      // 수익 등급 데이터
+  const [grades, setGrades] = useState([]);      // 원본 수익 등급 데이터
   const [loading, setLoading] = useState(true);  // 로딩 상태
   const { toast } = useToast();                  // 토스트 알림 훅
 
@@ -33,9 +46,6 @@ const ProfitGradePage = () => {
 
   /**
    * 고객 수익 등급 데이터 조회 함수
-   * - customer_profit_grade 테이블을 중심으로 contacts/customers 테이블 조인
-   * - 총 수익(total_profit) 기준 내림차순 정렬
-   * - 에러 발생 시 토스트 알림 및 콘솔 로깅
    */
   const fetchGrades = async () => {
     try {
@@ -61,62 +71,122 @@ const ProfitGradePage = () => {
     }
   };
 
+  // useMemo를 사용한 데이터 가공 (데이터 평탄화)
+  const tableData = useMemo(() => {
+    return grades.map(grade => ({
+      ...grade,
+      companyName: grade.contacts?.customers?.company_name || null,
+      contactName: grade.contacts?.name || null,
+    }));
+  }, [grades]);
+
+
   // 테이블 컬럼 설정
   const columns = [
     { 
-      key: 'contacts', 
+      key: 'companyName', 
       label: '고객사',
-      render: (value: any) => value?.customers?.company_name || '-'  // 3단계 관계형 데이터 접근
+      render: (value, row) => (
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-gray-400" />
+            <span className="font-medium">{value || '-'}</span>
+          </div>
+          {row.contactName && (
+            <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
+              <User className="w-3 h-3 ml-0.5" />
+              <span>{row.contactName}</span>
+            </div>
+          )}
+        </div>
+      )
     },
     { 
-      key: 'contacts', 
-      label: '담당자',
-      render: (value: any) => value?.name || '-'
+      key: 'customer_grade', 
+      label: '수익 등급',
+      render: (value) => {
+        switch (value) {
+          case 'A':
+            return <Badge className="bg-yellow-400 text-yellow-900 hover:bg-yellow-500 border-yellow-500"><Gem className="w-3.5 h-3.5 mr-1" />A 등급</Badge>;
+          case 'B':
+            return <Badge className="bg-slate-300 text-slate-800 hover:bg-slate-400 border-slate-400"><Award className="w-3.5 h-3.5 mr-1" />B 등급</Badge>;
+          case 'C':
+            return <Badge className="bg-orange-400 text-orange-900 hover:bg-orange-500 border-orange-500"><Medal className="w-3.5 h-3.5 mr-1" />C 등급</Badge>;
+          case 'D':
+             return <Badge variant="secondary" className="text-gray-600"><MinusCircle className="w-3.5 h-3.5 mr-1" />D 등급</Badge>;
+          default:
+            return <Badge variant="outline">{value}</Badge>;
+        }
+      }
     },
-    { key: 'customer_grade', label: '수익 등급' },
     { 
       key: 'total_sales', 
       label: '총 매출',
-      render: (value: number) => value ? `${value.toLocaleString()}원` : '-'  // 천단위 포맷
+      render: (value) => (
+        <div className="flex items-center gap-2 text-blue-600">
+          <TrendingUp className="w-4 h-4" />
+          <span className="font-medium">{value ? `${value.toLocaleString()}원` : '-'}</span>
+        </div>
+      )
     },
     { 
       key: 'total_cost', 
       label: '총 비용',
-      render: (value: number) => value ? `${value.toLocaleString()}원` : '-'
+      render: (value) => (
+        <div className="flex items-center gap-2 text-red-600">
+          <TrendingDown className="w-4 h-4" />
+          <span className="font-medium">{value ? `${value.toLocaleString()}원` : '-'}</span>
+        </div>
+      )
     },
     { 
       key: 'total_profit', 
       label: '총 수익',
-      render: (value: number) => value ? `${value.toLocaleString()}원` : '-'
+      render: (value) => (
+        <div className="flex items-center gap-2 text-green-700">
+          <DollarSign className="w-4 h-4" />
+          <span className="font-semibold">{value ? `${value.toLocaleString()}원` : '-'}</span>
+        </div>
+      )
     },
     { 
       key: 'profit_margin', 
       label: '수익률',
-      render: (value: number) => value ? `${(value * 100).toFixed(2)}%` : '-'  // % 변환
+      render: (value) => (
+         <div className="flex items-center gap-2">
+          <Percent className="w-4 h-4 text-gray-500" />
+          <span className="font-semibold text-gray-800">{value ? `${(value * 100).toFixed(1)}%` : '-'}</span>
+        </div>
+      )
     }
   ];
 
   // 필터 설정
   const filterFields = [
+    // {
+    //   key: 'companyName',
+    //   label: '고객사',
+    //   type: 'text' as const,
+    // },
     {
       key: 'customer_grade',
       label: '수익 등급',
       type: 'multiSelect' as const,
       options: [
-        { value: 'A', label: 'A등급' },
-        { value: 'B', label: 'B등급' },
-        { value: 'C', label: 'C등급' },
-        { value: 'D', label: 'D등급' }
+        { value: 'VIP', label: 'VIP' },
+        { value: 'Gold', label: 'Gold' },
+        { value: 'Silver', label: 'Silver' },
+        { value: 'Bronze', label: 'Bronze' }
       ]
     },
     {
       key: 'total_sales',
       label: '총 매출',
-      type: 'numberRange' as const  // 숫자 범위 필터
+      type: 'numberRange' as const
     },
     {
       key: 'profit_margin',
-      label: '수익률',
+      label: '수익률 (0~1 사이)',
       type: 'numberRange' as const
     }
   ];
@@ -128,18 +198,16 @@ const ProfitGradePage = () => {
 
   return (
     <div>
-      {/* 페이지 헤더 */}
       <PageHeader 
         title="고객 수익 등급" 
         description="고객별 수익성 분석 및 등급을 관리합니다. 등급, 매출, 수익률별로 필터링할 수 있습니다."
       />
       
-      {/* 수익 등급 데이터 테이블 */}
       <DataTable 
-        data={grades}
+        data={tableData}
         columns={columns}
         searchPlaceholder="고객사, 등급으로 검색..."
-        // filterFields={filterFields}
+        filterFields={filterFields}
         exportable={true}
         tableName="customer_profit_grade"
       />
