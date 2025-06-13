@@ -6,7 +6,7 @@ import {
   PieChart, Pie, Cell
 } from 'recharts';
 
-// ChartCard 컴포넌트가 받을 수 있는 props(속성) 타입 정의
+// ChartCard 컴포넌트가 받을 수 있는 props(속성) 타입 정의 2025.06.13 kim shin
 interface ChartCardProps {
   title: string;        // 차트 카드 상단에 표시할 제목
   data: any[];          // 차트에 사용할 데이터 배열
