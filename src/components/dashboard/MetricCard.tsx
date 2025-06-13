@@ -5,6 +5,7 @@ import { LucideIcon } from 'lucide-react';
 
 // MetricCard 컴포넌트가 받을 수 있는 props 타입 정의
 interface MetricCardProps {
+  
   title: string; // 카드 제목(예: "총 고객 수")
   value: string | number; // 카드에 표시할 값(예: 1200)
   icon: LucideIcon; // 카드 우측에 표시할 아이콘 컴포넌트

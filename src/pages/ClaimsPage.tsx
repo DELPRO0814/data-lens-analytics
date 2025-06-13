@@ -269,5 +269,4 @@ const levelColorMap = {
     </div>
   );
 };
-
 export default ClaimsPage;
