@@ -60,7 +60,26 @@ const ProductsPage = () => {
         .order('model');
 
       if (error) throw error;
-      setProducts(data || []);
+       const productsWithMargin = (data || []).map(product => {
+        const { originalprice, sellingprice } = product;
+        let margin = null; // 기본값은 null
+
+        // 판매가와 원가가 모두 유효한 숫자인 경우에만 계산
+        if (sellingprice > 0 && originalprice > 0) {
+          margin = ((sellingprice - originalprice) / sellingprice) * 100;
+        }
+        
+        // 기존 product 객체에 margin 속성을 추가하여 반환
+        return {
+          ...product,
+          margin: margin
+        };
+      });
+      // --- ✨ 여기까지 수정 ---
+
+      // 마진율이 추가된 데이터로 상태 업데이트
+      setProducts(productsWithMargin);
+
     } catch (error) {
       console.error('제품 데이터 로딩 오류:', error);
       toast({

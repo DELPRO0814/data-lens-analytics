@@ -62,15 +62,15 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, user }) => {
       {/* 우측: 알림, 사용자 정보 및 로그아웃 버튼 */}
       <div className="flex items-center space-x-3">
         {/* 알림 버튼 */}
-        <button className="p-2 rounded-xl hover:bg-white/30 transition-all duration-200 relative group">
+        {/* <button className="p-2 rounded-xl hover:bg-white/30 transition-all duration-200 relative group">
           <Bell className="w-5 h-5 text-gray-600 group-hover:text-gray-800" />
           <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-full"></div>
-        </button>
+        </button> */}
 
         {/* 설정 버튼 */}
-        <button className="p-2 rounded-xl hover:bg-white/30 transition-all duration-200 group">
+        {/* <button className="p-2 rounded-xl hover:bg-white/30 transition-all duration-200 group">
           <Settings className="w-5 h-5 text-gray-600 group-hover:text-gray-800 group-hover:rotate-90 transition-all duration-300" />
-        </button>
+        </button> */}
         
         {/* 사용자 정보 영역 */}
         <div className="flex items-center space-x-3 bg-white/50 rounded-xl px-4 py-2">
