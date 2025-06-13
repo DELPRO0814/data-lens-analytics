@@ -46,7 +46,7 @@ const coreMenuItems = [
   { path: '/claims', label: '클레임', icon: Shield, gradient: 'from-slate-500 to-gray-500' },
   { path: '/profit-grade', label: '고객 수익 등급', icon: DollarSign, gradient: 'from-green-500 to-teal-500' },
   //{ path: '/order-forecast', label: '고객 주문 예측', icon: TrendingDown, gradient: 'from-blue-500 to-purple-500' },
-  { path: '/priority-dashboard', label: '우선순위 대시보드', icon: Star, gradient: 'from-yellow-500 to-amber-500' },
+  { path: '/priority-dashboard', label: '위험 관리', icon: Star, gradient: 'from-yellow-500 to-amber-500' },
 ];
 
 // 선택적 메뉴 항목(optionalMenuItems): 필요 시 주석 해제하여 추가 가능
