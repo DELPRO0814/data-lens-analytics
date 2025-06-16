@@ -18,49 +18,45 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom'; // useNavigate 추가
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Save, X } from 'lucide-react'; // 아이콘 추가
 import ContactsSection from '@/components/customer/ContactsSection';
 import SegmentsSection from '@/components/customer/SegmentsSection';
 import AddContactModal from '@/components/customer/AddContactModal';
 import AddSegmentModal from '@/components/customer/AddSegmentModal';
 
 const CustomerDetailPage = () => {
-  // URL에서 customerId 추출 (문자열)
   const { customerId } = useParams();
-  // 상태 관리
-  const [customer, setCustomer] = useState<any>(null);        // 고객 정보
-  const [contacts, setContacts] = useState([]);               // 연락처 목록
-  const [segments, setSegments] = useState([]);               // 세그먼트 목록
-  const [loading, setLoading] = useState(true);               // 로딩 상태
-  const [showAddContactModal, setShowAddContactModal] = useState(false); // 연락처 추가 모달
-  const [showAddSegmentModal, setShowAddSegmentModal] = useState(false); // 세그먼트 추가 모달
+  const navigate = useNavigate(); // 페이지 이동을 위한 hook
   const { toast } = useToast();
 
-  // customerId를 숫자로 변환 (없으면 null)
+  const [customer, setCustomer] = useState<any>(null);
+  const [contacts, setContacts] = useState([]);
+  const [segments, setSegments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddContactModal, setShowAddContactModal] = useState(false);
+  const [showAddSegmentModal, setShowAddSegmentModal] = useState(false);
+
+  // --- 추가된 상태 ---
+  const [isEditing, setIsEditing] = useState(false); // 수정 모드 상태
+  const [editedCustomer, setEditedCustomer] = useState<any>(null); // 수정 중인 고객 정보
+
   const customerIdNum = customerId ? parseInt(customerId, 10) : null;
 
-  // customerId가 바뀔 때마다 데이터 새로 불러오기
   useEffect(() => {
     if (customerIdNum) {
       fetchCustomerData();
     }
   }, [customerIdNum]);
 
-  /**
-   * 고객 정보, 연락처, 세그먼트 데이터를 모두 조회하는 함수
-   * - 고객 정보: customers 테이블에서 단일 레코드(single) 조회
-   * - 연락처: contacts 테이블에서 customer_id로 필터
-   * - 세그먼트: segments 테이블에서 contacts.customer_id로 필터 + 담당자 이름 포함
-   */
   const fetchCustomerData = async () => {
     try {
       setLoading(true);
 
-      // 1. 고객 기본 정보 조회
+      // 고객 정보 조회
       const { data: customerData, error: customerError } = await supabase
         .from('customers')
         .select('*')
@@ -69,8 +65,9 @@ const CustomerDetailPage = () => {
 
       if (customerError) throw customerError;
       setCustomer(customerData);
+      setEditedCustomer(customerData); // 수정용 상태에도 초기 데이터 설정
 
-      // 2. 연락처 목록 조회 (이 고객의 담당자)
+      // 연락처 목록 조회
       const { data: contactsData, error: contactsError } = await supabase
         .from('contacts')
         .select('*')
@@ -80,17 +77,15 @@ const CustomerDetailPage = () => {
       if (contactsError) throw contactsError;
       setContacts(contactsData || []);
 
-      // 3. 세그먼트 목록 조회 (이 고객의 담당자별 세그먼트)
+      // 세그먼트 목록 조회
       const { data: segmentsData, error: segmentsError } = await supabase
         .from('segments')
-        .select(`
-          *,
-          contacts!inner(customer_id, name)
-        `)
+        .select(`*, contacts!inner(customer_id, name)`)
         .eq('contacts.customer_id', customerIdNum);
 
       if (segmentsError) throw segmentsError;
       setSegments(segmentsData || []);
+
     } catch (error) {
       console.error('고객 데이터 로딩 오류:', error);
       toast({
@@ -102,10 +97,97 @@ const CustomerDetailPage = () => {
       setLoading(false);
     }
   };
+  
+  // --- 핸들러 함수들 (추가 및 수정) ---
 
   /**
-   * 연락처 추가 성공 시 실행 (데이터 갱신 + 모달 닫기 + 성공 알림)
+   * 수정 모드 활성화/비활성화
    */
+  const handleToggleEdit = () => {
+    if (isEditing) {
+      // 수정 취소 시, 원래 데이터로 복구
+      setEditedCustomer(customer);
+    }
+    setIsEditing(!isEditing);
+  };
+  
+  /**
+   * 입력 필드 변경 핸들러
+   */
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setEditedCustomer({ ...editedCustomer, [name]: value });
+  };
+
+  /**
+   * 고객 정보 업데이트
+   */
+  const handleUpdateCustomer = async () => {
+    if (!editedCustomer) return;
+
+    try {
+      const { error } = await supabase
+        .from('customers')
+        .update({
+          company_name: editedCustomer.company_name,
+          company_type: editedCustomer.company_type,
+          industry_type: editedCustomer.industry_type,
+          region: editedCustomer.region,
+          country: editedCustomer.country,
+          company_size: editedCustomer.company_size,
+        })
+        .eq('customer_id', customerIdNum);
+
+      if (error) throw error;
+
+      await fetchCustomerData(); // 데이터 새로고침
+      setIsEditing(false); // 수정 모드 종료
+      toast({
+        title: "성공",
+        description: "고객 정보가 성공적으로 수정되었습니다.",
+      });
+    } catch (error) {
+      console.error('고객 정보 업데이트 오류:', error);
+      toast({
+        title: "오류",
+        description: "고객 정보 수정에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  /**
+   * 고객 정보 삭제
+   */
+  const handleDeleteCustomer = async () => {
+    if (window.confirm(`'${customer.company_name}' 고객 정보를 정말 삭제하시겠습니까? 관련된 모든 연락처와 세그먼트 정보도 함께 삭제됩니다.`)) {
+      try {
+        // Supabase의 CASCADE 설정에 따라 관련 데이터(contacts, segments)도 삭제될 수 있습니다.
+        // 만약 CASCADE 설정이 없다면, contacts와 segments를 먼저 삭제해야 합니다.
+        const { error } = await supabase
+          .from('customers')
+          .delete()
+          .eq('customer_id', customerIdNum);
+
+        if (error) throw error;
+
+        toast({
+          title: "삭제 완료",
+          description: "고객 정보가 삭제되었습니다.",
+        });
+        navigate('/customers'); // 고객 목록 페이지로 이동
+      } catch (error) {
+        console.error('고객 정보 삭제 오류:', error);
+        toast({
+          title: "오류",
+          description: "고객 정보 삭제에 실패했습니다.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+
   const handleContactAdded = () => {
     fetchCustomerData();
     setShowAddContactModal(false);
@@ -115,9 +197,6 @@ const CustomerDetailPage = () => {
     });
   };
 
-  /**
-   * 세그먼트 추가 성공 시 실행 (데이터 갱신 + 모달 닫기 + 성공 알림)
-   */
   const handleSegmentAdded = () => {
     fetchCustomerData();
     setShowAddSegmentModal(false);
@@ -127,12 +206,10 @@ const CustomerDetailPage = () => {
     });
   };
 
-  // 데이터 로딩 중 표시
   if (loading) {
     return <div className="text-center py-8">로딩중...</div>;
   }
 
-  // 고객 정보가 없거나 잘못된 ID일 때 안내
   if (!customer || !customerIdNum) {
     return (
       <div className="text-center py-8">
@@ -146,7 +223,6 @@ const CustomerDetailPage = () => {
 
   return (
     <div className="p-6">
-      {/* 상단: 뒤로가기 링크 + 고객 정보 카드 */}
       <div className="mb-6">
         <Link 
           to="/customers" 
@@ -158,32 +234,96 @@ const CustomerDetailPage = () => {
         
         {/* 고객사 정보 카드 */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">{customer.company_name}</h1>
+          <div className="flex justify-between items-start mb-4">
+            {isEditing ? (
+              <input
+                type="text"
+                name="company_name"
+                value={editedCustomer.company_name}
+                onChange={handleInputChange}
+                className="text-2xl font-bold text-gray-900 border-b-2 border-blue-500 focus:outline-none"
+              />
+            ) : (
+              <h1 className="text-2xl font-bold text-gray-900">{customer.company_name}</h1>
+            )}
+            
+            {/* --- 수정/삭제 버튼 영역 --- */}
+            <div className="flex items-center space-x-2">
+              {isEditing ? (
+                <>
+                  <Button onClick={handleUpdateCustomer} size="sm" className="bg-blue-600 hover:bg-blue-700">
+                    <Save className="w-4 h-4 mr-2" /> 저장
+                  </Button>
+                  <Button onClick={handleToggleEdit} size="sm" variant="outline">
+                    <X className="w-4 h-4 mr-2" /> 취소
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button onClick={handleToggleEdit} size="sm" variant="outline">
+                    <Edit className="w-4 h-4 mr-2" /> 수정
+                  </Button>
+                  <Button onClick={handleDeleteCustomer} size="sm" variant="destructive">
+                    <Trash2 className="w-4 h-4 mr-2" /> 삭제
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* --- 정보 표시/입력 영역 --- */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-            <div>
-              <span className="font-medium text-gray-500">회사 유형:</span>
-              <p>{customer.company_type || '-'}</p>
-            </div>
-            <div>
-              <span className="font-medium text-gray-500">업종:</span>
-              <p>{customer.industry_type || '-'}</p>
-            </div>
-            <div>
-              <span className="font-medium text-gray-500">지역:</span>
-              <p>{customer.region || '-'}</p>
-            </div>
-            <div>
-              <span className="font-medium text-gray-500">국가:</span>
-              <p>{customer.country || '-'}</p>
-            </div>
-            <div>
-              <span className="font-medium text-gray-500">회사 규모:</span>
-              <p>{customer.company_size || '-'}</p>
-            </div>
-            <div>
-              <span className="font-medium text-gray-500">등록일:</span>
-              <p>{customer.reg_date ? new Date(customer.reg_date).toLocaleDateString() : '-'}</p>
-            </div>
+            {isEditing ? (
+              <>
+                <div>
+                  <label className="font-medium text-gray-500">회사 유형</label>
+                  <input type="text" name="company_type" value={editedCustomer.company_type || ''} onChange={handleInputChange} className="w-full p-1 border rounded"/>
+                </div>
+                <div>
+                  <label className="font-medium text-gray-500">업종</label>
+                  <input type="text" name="industry_type" value={editedCustomer.industry_type || ''} onChange={handleInputChange} className="w-full p-1 border rounded"/>
+                </div>
+                <div>
+                  <label className="font-medium text-gray-500">지역</label>
+                  <input type="text" name="region" value={editedCustomer.region || ''} onChange={handleInputChange} className="w-full p-1 border rounded"/>
+                </div>
+                <div>
+                  <label className="font-medium text-gray-500">국가</label>
+                  <input type="text" name="country" value={editedCustomer.country || ''} onChange={handleInputChange} className="w-full p-1 border rounded"/>
+                </div>
+                <div>
+                  <label className="font-medium text-gray-500">회사 규모</label>
+                  <input type="text" name="company_size" value={editedCustomer.company_size || ''} onChange={handleInputChange} className="w-full p-1 border rounded"/>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <span className="font-medium text-gray-500">회사 유형:</span>
+                  <p>{customer.company_type || '-'}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-500">업종:</span>
+                  <p>{customer.industry_type || '-'}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-500">지역:</span>
+                  <p>{customer.region || '-'}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-500">국가:</span>
+                  <p>{customer.country || '-'}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-500">회사 규모:</span>
+                  <p>{customer.company_size || '-'}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-500">등록일:</span>
+                  <p>{customer.reg_date ? new Date(customer.reg_date).toLocaleDateString() : '-'}</p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -194,16 +334,12 @@ const CustomerDetailPage = () => {
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">연락처</h2>
-              <Button 
-                onClick={() => setShowAddContactModal(true)}
-                className="flex items-center space-x-2"
-              >
+              <Button onClick={() => setShowAddContactModal(true)} className="flex items-center space-x-2">
                 <Plus className="w-4 h-4" />
                 <span>연락처 추가</span>
               </Button>
             </div>
           </div>
-          {/* 연락처 목록 테이블/섹션 */}
           <ContactsSection contacts={contacts} onContactUpdated={fetchCustomerData} />
         </div>
 
@@ -212,21 +348,12 @@ const CustomerDetailPage = () => {
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">세그먼트</h2>
-              {/* <Button 
-                onClick={() => setShowAddSegmentModal(true)}
-                className="flex items-center space-x-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span>세그먼트 추가</span>
-              </Button> */}
             </div>
           </div>
-          {/* 세그먼트 목록 테이블/섹션 */}
           <SegmentsSection segments={segments} onSegmentUpdated={fetchCustomerData} />
         </div>
       </div>
 
-      {/* 연락처 추가 모달 */}
       <AddContactModal
         isOpen={showAddContactModal}
         onClose={() => setShowAddContactModal(false)}
@@ -234,7 +361,6 @@ const CustomerDetailPage = () => {
         onContactAdded={handleContactAdded}
       />
 
-      {/* 세그먼트 추가 모달 */}
       <AddSegmentModal
         isOpen={showAddSegmentModal}
         onClose={() => setShowAddSegmentModal(false)}
