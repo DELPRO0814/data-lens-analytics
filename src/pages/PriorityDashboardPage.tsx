@@ -198,7 +198,7 @@ const PriorityDashboardPage = () => {
     <div className="space-y-6">
       {/* 페이지 헤더 */}
       <PageHeader
-        title="우선순위 대시보드"
+        title="위험 관리 대시보드"
         description="고위험 고객 및 즉시 대응이 필요한 이슈를 관리합니다."
       />
 

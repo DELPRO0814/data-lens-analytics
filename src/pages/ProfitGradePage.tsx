@@ -106,14 +106,14 @@ const ProfitGradePage = () => {
       label: '수익 등급',
       render: (value) => {
         switch (value) {
-          case 'A':
-            return <Badge className="bg-yellow-400 text-yellow-900 hover:bg-yellow-500 border-yellow-500"><Gem className="w-3.5 h-3.5 mr-1" />A 등급</Badge>;
-          case 'B':
-            return <Badge className="bg-slate-300 text-slate-800 hover:bg-slate-400 border-slate-400"><Award className="w-3.5 h-3.5 mr-1" />B 등급</Badge>;
-          case 'C':
-            return <Badge className="bg-orange-400 text-orange-900 hover:bg-orange-500 border-orange-500"><Medal className="w-3.5 h-3.5 mr-1" />C 등급</Badge>;
-          case 'D':
-             return <Badge variant="secondary" className="text-gray-600"><MinusCircle className="w-3.5 h-3.5 mr-1" />D 등급</Badge>;
+          case 'VIP':
+            return <Badge className="bg-yellow-400 text-yellow-900 hover:bg-yellow-500 border-yellow-500"><Gem className="w-3.5 h-3.5 mr-1" />VIP</Badge>;
+          case 'Gold':
+            return <Badge className="bg-slate-300 text-slate-800 hover:bg-slate-400 border-slate-400"><Award className="w-3.5 h-3.5 mr-1" />Gold</Badge>;
+          case 'Silver':
+            return <Badge className="bg-orange-400 text-orange-900 hover:bg-orange-500 border-orange-500"><Medal className="w-3.5 h-3.5 mr-1" />Silver</Badge>;
+          case 'Bronze':
+             return <Badge variant="secondary" className="text-gray-600"><MinusCircle className="w-3.5 h-3.5 mr-1" />Bronze</Badge>;
           default:
             return <Badge variant="outline">{value}</Badge>;
         }

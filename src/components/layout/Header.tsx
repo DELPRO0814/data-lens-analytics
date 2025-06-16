@@ -73,6 +73,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, user }) => {
         </button> */}
         
         {/* 사용자 정보 영역 */}
+        {/* 사용자 정보 영역 */}
         <div className="flex items-center space-x-3 bg-white/50 rounded-xl px-4 py-2">
           <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
             <User className="w-4 h-4 text-white" />
@@ -81,7 +82,10 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, user }) => {
             <div className="text-sm font-medium text-gray-800">
               {user?.email?.split('@')[0] || '사용자'}
             </div>
-            <div className="text-xs text-gray-500">관리자</div>
+            <div className="text-xs text-gray-500">
+              {/* 이메일 앞부분이 'asdf'이면 '관리자', 아니면 '사용자'로 표시 */}
+              {user?.email?.split('@')[0] === 'asdf' ? '관리자' : '사용자'}
+            </div>
           </div>
         </div>
         
